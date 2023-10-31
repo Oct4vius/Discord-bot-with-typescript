@@ -38,7 +38,7 @@ client.on('messageCreate', async (msg: Message) =>{
     if(msg.author.bot) return;
 
     switch(msg.content.toLowerCase()){
-        case 'hola':
+        case 'ctm':
             let random: number = Math.trunc(Math.random() * bensonInteraction.length);
 
             msg.reply({
