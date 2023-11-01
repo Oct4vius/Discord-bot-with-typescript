@@ -7,16 +7,19 @@ config();
 type bensonInteractionType = {
     imgPath: string
     message: string
+    audio: string
 }
 
 const bensonInteraction: bensonInteractionType[] = [
     {
         imgPath: "./assets/images/benson.png",
-        message: '¿Como \'ta muchacho?'
+        message: '¿Como \'ta muchacho?',
+        audio: './assets/audio/cmtm.mp3'
     },
     {
         imgPath: "./assets/images/muchacho.png",
-        message: 'Yo te veo muy bien'
+        message: 'Yo te veo muy bien',
+        audio: './assets/audio/ylvaumb.mp3'
     }
 ]
 
@@ -57,7 +60,7 @@ client.on('messageCreate', async (msg: Message) =>{
                 });
 
                 const player = createAudioPlayer();
-                const resource = createAudioResource('./assets/audio/cmtm.mp3')
+                const resource = createAudioResource(bensonInteraction[random].audio)
                 player.play(resource);
 
                 connection.subscribe(player);
