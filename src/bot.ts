@@ -1,8 +1,10 @@
 
 import {Client, GatewayIntentBits, IntentsBitField, Message} from 'discord.js';
-import { joinVoiceChannel, createAudioPlayer, createAudioResource } from '@discordjs/voice';
+import { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnection } from '@discordjs/voice';
 import { config } from 'dotenv';
 config();
+
+let connection: VoiceConnection;
 
 type bensonInteractionType = {
     imgPath: string
@@ -13,13 +15,18 @@ type bensonInteractionType = {
 const bensonInteraction: bensonInteractionType[] = [
     {
         imgPath: "./assets/images/benson.png",
-        message: '¿Como \'ta muchacho?',
-        audio: './assets/audio/cmtm.mp3'
+        message: "¿Como \'ta muchacho?",
+        audio: "./assets/audio/cmtm.mp3"
     },
     {
         imgPath: "./assets/images/muchacho.png",
-        message: 'Yo te veo muy bien',
-        audio: './assets/audio/ylvaumb.mp3'
+        message: "Yo te veo muy bien",
+        audio: "./assets/audio/ylvaumb.mp3"
+    },
+    {
+        imgPath: "./assets/images/recompensa.png",
+        message: "Tu te mereces una recompensa",
+        audio: "./assets/audio/recompensa.mp3"
     }
 ]
 
@@ -50,14 +57,17 @@ client.on('messageCreate', async (msg: Message) =>{
             })
             
             if (msg.member && msg.member.voice.channel){
-                const voiceChannel = msg.member.voice.channel;
                 if(!msg.guild) return
 
-                const connection = joinVoiceChannel({
-                    channelId: voiceChannel.id,
-                    guildId: msg.guild.id,
-                    adapterCreator: msg.guild?.voiceAdapterCreator,
-                });
+                const voiceChannel = msg.member.voice.channel;
+
+                if(!connection){
+                    connection = joinVoiceChannel({
+                        channelId: voiceChannel.id,
+                        guildId: msg.guild.id,
+                        adapterCreator: msg.guild?.voiceAdapterCreator,
+                    });
+                }
 
                 const player = createAudioPlayer();
                 const resource = createAudioResource(bensonInteraction[random].audio)
@@ -72,8 +82,111 @@ client.on('messageCreate', async (msg: Message) =>{
 
             break;
 
-        case 'vete':
+        case 'muchacho':
+            const muchacho: number = 0
+
+            msg.reply({
+                content: bensonInteraction[muchacho].message,
+                files: [bensonInteraction[muchacho].imgPath]
+            })
             
+            if (msg.member && msg.member.voice.channel){
+                if(!msg.guild) return
+
+                const voiceChannel = msg.member.voice.channel;
+
+                if(!connection){
+                    connection = joinVoiceChannel({
+                        channelId: voiceChannel.id,
+                        guildId: msg.guild.id,
+                        adapterCreator: msg.guild?.voiceAdapterCreator,
+                    });
+                }
+
+                const player = createAudioPlayer();
+                const resource = createAudioResource(bensonInteraction[muchacho].audio)
+                player.play(resource);
+
+                connection.subscribe(player);
+
+                player.on('error', error => {
+                console.error(`Error: ${error.message} with resource `);
+                });
+            }
+
+            break;
+
+        case 'bien':
+            let bien: number = 1
+
+            msg.reply({
+                content: bensonInteraction[bien].message,
+                files: [bensonInteraction[bien].imgPath]
+            })
+            
+            if (msg.member && msg.member.voice.channel){
+                if(!msg.guild) return
+
+                const voiceChannel = msg.member.voice.channel;
+
+                if(!connection){
+                    connection = joinVoiceChannel({
+                        channelId: voiceChannel.id,
+                        guildId: msg.guild.id,
+                        adapterCreator: msg.guild?.voiceAdapterCreator,
+                    });
+                }
+
+                const player = createAudioPlayer();
+                const resource = createAudioResource(bensonInteraction[bien].audio)
+                player.play(resource);
+
+                connection.subscribe(player);
+
+                player.on('error', error => {
+                console.error(`Error: ${error.message} with resource `);
+                });
+            }
+
+            break;
+
+        case 'recompensa':
+
+            let recompensa: number = 2
+
+            msg.reply({
+                content: bensonInteraction[recompensa].message,
+                files: [bensonInteraction[recompensa].imgPath]
+            })
+            
+            if (msg.member && msg.member.voice.channel){
+                if(!msg.guild) return
+
+                const voiceChannel = msg.member.voice.channel;
+
+                if(!connection){
+                    connection = joinVoiceChannel({
+                        channelId: voiceChannel.id,
+                        guildId: msg.guild.id,
+                        adapterCreator: msg.guild?.voiceAdapterCreator,
+                    });
+                }
+
+                const player = createAudioPlayer();
+                const resource = createAudioResource(bensonInteraction[recompensa].audio)
+                player.play(resource);
+
+                connection.subscribe(player);
+
+                player.on('error', error => {
+                console.error(`Error: ${error.message} with resource `);
+                });
+            }
+
+            break;
+
+        case 'vete':
+            connection.destroy()
             
             break;
 
