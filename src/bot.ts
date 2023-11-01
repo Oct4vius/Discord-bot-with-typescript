@@ -4,7 +4,7 @@ import { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnecti
 import { config } from 'dotenv';
 config();
 
-let connection: VoiceConnection;
+let connection: VoiceConnection | undefined;
 
 type bensonInteractionType = {
     imgPath: string
@@ -20,12 +20,12 @@ const bensonInteraction: bensonInteractionType[] = [
     },
     {
         imgPath: "./assets/images/muchacho.png",
-        message: "Yo te veo muy bien",
+        message: "Yo te veo muy bien.",
         audio: "./assets/audio/ylvaumb.mp3"
     },
     {
         imgPath: "./assets/images/recompensa.png",
-        message: "Tu te mereces una recompensa",
+        message: "Tú te merece' una recompensa.",
         audio: "./assets/audio/recompensa.mp3"
     }
 ]
@@ -46,6 +46,8 @@ client.on('ready', () => {
 
 client.on('messageCreate', async (msg: Message) =>{
     if(msg.author.bot) return;
+
+    console.log(connection)
 
     switch(msg.content.toLowerCase()){
         case 'ctm':
@@ -186,7 +188,10 @@ client.on('messageCreate', async (msg: Message) =>{
             break;
 
         case 'vete':
+            if(!connection) return
+
             connection.destroy()
+            connection = undefined
             
             break;
 
