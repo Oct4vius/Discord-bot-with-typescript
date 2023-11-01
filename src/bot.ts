@@ -47,8 +47,6 @@ client.on('ready', () => {
 client.on('messageCreate', async (msg: Message) =>{
     if(msg.author.bot) return;
 
-    console.log(connection)
-
     switch(msg.content.toLowerCase()){
         case 'ctm':
             let random: number = Math.trunc(Math.random() * bensonInteraction.length);
