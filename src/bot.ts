@@ -1,15 +1,78 @@
 
-import {Client, GatewayIntentBits, IntentsBitField, Message} from 'discord.js';
-import { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnection } from '@discordjs/voice';
+import {Client, GatewayIntentBits, IntentsBitField, Message, TextChannel, VoiceChannel} from 'discord.js';
+import { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnection, PlayerSubscription, AudioPlayer } from '@discordjs/voice';
 import { config } from 'dotenv';
-config();
+import axios from 'axios';
+import {stream} from 'play-dl'
+import ytdl from 'ytdl-core';
+import { send } from 'process';
 
-let connection: VoiceConnection | undefined;
+
+config();
 
 type bensonInteractionType = {
     imgPath: string
     message: string
     audio: string
+}
+
+const apiKey: string | undefined = process.env.API_KEY_GOOGLE;
+const apiUrl: string =  "https://www.googleapis.com/youtube/v3"
+
+let connection: VoiceConnection | undefined;
+let voiceChannel: VoiceChannel;
+let queue: string[] = [];
+let nowPlayingUrl: string;
+
+const youtubeSearch = async (searchTerm: string) =>{
+    const url = `${apiUrl}/search?key=${apiKey}&type=video&part=snippet&q=${searchTerm}`;
+
+    const response = await axios.get(url);
+
+    let videoID = response.data.items[0].id.videoId;
+
+    return `https://www.youtube.com/watch?v=${videoID}`;
+}
+
+const play = (msg: Message) =>{
+
+    if(!connection) return;
+    
+    try {
+    
+        let nextUrl: string = queue[0];
+        const player: AudioPlayer = createAudioPlayer();
+        
+        const resource = createAudioResource(ytdl(nextUrl, {filter: 'audioonly', quality: "highestaudio", highWaterMark: 1 << 25}))
+        player.play(resource);
+        connection.subscribe(player);
+
+        queue.shift()
+
+        connection.on("stateChange", (prevState, currState)=>{
+            if(currState.status === 'destroyed'){
+                connection === undefined;
+                queue = []
+            }
+        })
+
+        player.on("stateChange", (prevState, currState) =>{
+            if(currState.status !== "playing"){
+
+                if(queue.length === 0 && connection){
+                    msg.channel.send('Se acabo')
+                    connection.destroy()
+                    connection = undefined
+                }else{
+                    play(msg)
+                }
+            }
+        })
+
+    } catch (error) {
+        console.log(error)
+    }
+
 }
 
 const bensonInteraction: bensonInteractionType[] = [
@@ -44,9 +107,12 @@ client.on('ready', () => {
     console.log(`I'm ready. My name is ${client.user?.tag}`)
 })
 
+
 client.on('messageCreate', async (msg: Message) =>{
     if(msg.author.bot) return;
+    let msgSplited: string[] = msg.content.split(" ")
 
+    //Benson Interactions
     switch(msg.content.toLowerCase()){
         case 'ctm':
             let random: number = Math.trunc(Math.random() * bensonInteraction.length);
@@ -72,7 +138,6 @@ client.on('messageCreate', async (msg: Message) =>{
                 const player = createAudioPlayer();
                 const resource = createAudioResource(bensonInteraction[random].audio)
                 player.play(resource);
-
                 connection.subscribe(player);
 
                 player.on('error', error => {
@@ -184,7 +249,7 @@ client.on('messageCreate', async (msg: Message) =>{
             }
 
             break;
-
+        
         case 'vete':
             if(!connection) return
 
@@ -194,7 +259,49 @@ client.on('messageCreate', async (msg: Message) =>{
             break;
 
     }
-})
 
+    //Music Interactions
+    switch(msgSplited[0]){
+        
+        case 'pon':
+            let voiceChannel = msg.member?.voice.channel
+
+            if(!msg.guild) return;
+
+            if(msgSplited.length < 2){
+                msg.channel.send('Tienes que dar un parametro')
+                return;
+            }
+
+            if(!voiceChannel) return
+
+            msgSplited.shift()
+            let msgJoined = msgSplited.join(" ")
+
+            if(!ytdl.validateURL(msgJoined)){
+                let url: string = await youtubeSearch(msgJoined)
+                queue.push(url)
+
+                if(connection){
+                    msg.channel.send('Aguantate mmg')
+                }
+
+                if(!connection){
+                    connection = joinVoiceChannel({
+                        channelId: voiceChannel.id,
+                        guildId: msg.guild.id,
+                        adapterCreator: msg.guild?.voiceAdapterCreator,
+                    });
+                    play(msg);
+                }
+
+            }
+        
+            break;
+    }
+
+    //Chatgpt Interactions
+
+})
 
 client.login(process.env.TOKEN)
