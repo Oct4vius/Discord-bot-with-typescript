@@ -243,6 +243,14 @@ client.on('messageCreate', async (msg: Message) =>{
 
                 connection.subscribe(player);
 
+                player.on("stateChange", (pevState, currState) =>{
+                    if(!connection) return
+                    if(currState.status === 'idle'){
+                        connection.destroy()
+                        connection = undefined
+                    }
+                })
+
                 player.on('error', error => {
                 console.error(`Error: ${error.message} with resource `);
                 });
@@ -293,9 +301,26 @@ client.on('messageCreate', async (msg: Message) =>{
                         adapterCreator: msg.guild?.voiceAdapterCreator,
                     });
                     play(msg);
+                    
+                }
+            }else{
+                queue.push(msgJoined)
+
+                if(connection){
+                    msg.channel.send('Aguantate mmg')
                 }
 
+                if(!connection){
+                    connection = joinVoiceChannel({
+                        channelId: voiceChannel.id,
+                        guildId: msg.guild.id,
+                        adapterCreator: msg.guild?.voiceAdapterCreator,
+                    });
+                    play(msg);
+                }
             }
+
+            
         
             break;
     }
