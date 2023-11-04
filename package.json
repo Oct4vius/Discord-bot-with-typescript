@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/bot.js",
+    "start": "node dist/index.js",
     "dev": "nodemon -e ts --exec \"npm run build && npm start\""
   },
   "license": "MIT",
