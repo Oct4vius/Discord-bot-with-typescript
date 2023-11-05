@@ -1,10 +1,10 @@
 {
   "name": "discord-bot-with-typescript",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
     "start": "node dist/index.js",
+    "build": "tsc",
     "dev": "nodemon -e ts --exec \"npm run build && npm start\""
   },
   "license": "MIT",
