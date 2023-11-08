@@ -4,7 +4,6 @@ import { config } from 'dotenv';
 import axios from 'axios';
 import ytdl from 'ytdl-core';
 
-
 config();
 
 type bensonInteractionType = {
@@ -54,25 +53,22 @@ const play = (bensonAudio?: string) =>{
         queue.shift()
 
         connection.on("stateChange", (prevState, currState)=>{
+            console.log(currState.status)
             if(currState.status === 'destroyed'){
-                connection === undefined;
-                queue = []
+                connection = undefined;
             }
         })
 
         player.on("stateChange", (prevState, currState) =>{
-            if(bensonAudio) {
-                return;
-            };
             
-            if(currState.status !== "playing"){
-
-                if(queue.length === 0 && connection && !bensonAudio){
+            if(currState.status === "idle"){
+                if(queue.length === 0 && connection){
                     // textMusicChannel.send('Se acabo')
                     connection.destroy()
-                    connection = undefined
                 }else{
-                    play()
+                    if(!bensonAudio){
+                        play()
+                    }
                 }
             }
         })

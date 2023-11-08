@@ -12,29 +12,7 @@
     http-response-object "^3.0.1"
     parse-cache-control "^1.0.1"
 
-"@discord-player/equalizer@^0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@discord-player/equalizer/-/equalizer-0.2.3.tgz#a5a00150479db71d28d85ed162cf4954341e325a"
-  integrity sha512-71UAepYMbHTg2QQLXQAgyuXYHrgAYpJDxjg9dRWfTUNf+zfOAlyJEiRRk/WFhQyGu6m23iLR/H/JxgF4AW8Csg==
-
-"@discord-player/ffmpeg@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@discord-player/ffmpeg/-/ffmpeg-0.1.0.tgz#3c8f1fc7dfdb033dc8ecd18a9e82fde2a3867196"
-  integrity sha512-0kW6q4gMQN2B4Z4EzmUgXrKQSXXmyhjdZBBZ/6jSHZ9fh814oOu+JXP01VvtWHwTylI7qJHIctEWtSyjEubCJg==
-
-"@discord-player/opus@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@discord-player/opus/-/opus-0.1.2.tgz#f097cdeb0fb0478f56ff586e26e57cdfea5dc63d"
-  integrity sha512-yF0m+pW7H9RCbRcgk/i6vv47tlWxaCHjp6/F0W4GXZMGZ0pcvZaxk8ic7aFPc3+IoDvrAHvWNomLq+JeFzdncA==
-
-"@discord-player/utils@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@discord-player/utils/-/utils-0.2.2.tgz#ece599124472ea8a5fc28e81adaee38cf4ad5a0c"
-  integrity sha512-UklWUT7BcZEkBgywM9Cmpo2nwj3SQ9Wmhu6ml1uy/YRQnY8IRdZEHD84T2kfjOg4LVZek0ej1VerIqq7a9PAHQ==
-  dependencies:
-    "@discordjs/collection" "^1.1.0"
-
-"@discordjs/builders@^1.6.4", "@discordjs/builders@^1.6.5":
+"@discordjs/builders@^1.6.5":
   version "1.6.5"
   resolved "https://registry.yarnpkg.com/@discordjs/builders/-/builders-1.6.5.tgz#3e23912eaab1d542b61ca0fa7202e5aaef2b7200"
   integrity sha512-SdweyCs/+mHj+PNhGLLle7RrRFX9ZAhzynHahMCLqp5Zeq7np7XC6/mgzHc79QoVlQ1zZtOkTTiJpOZu5V8Ufg==
@@ -47,12 +25,12 @@
     ts-mixer "^6.0.3"
     tslib "^2.6.1"
 
-"@discordjs/collection@^1.1.0", "@discordjs/collection@^1.5.2", "@discordjs/collection@^1.5.3":
+"@discordjs/collection@^1.5.3":
   version "1.5.3"
   resolved "https://registry.npmjs.org/@discordjs/collection/-/collection-1.5.3.tgz"
   integrity sha512-SVb428OMd3WO1paV3rm6tSjM4wC+Kecaa1EUGX7vc6/fddvw/6lg90z4QtCqm21zvVe92vMMDt9+DkIvjXImQQ==
 
-"@discordjs/formatters@^0.3.1", "@discordjs/formatters@^0.3.2":
+"@discordjs/formatters@^0.3.2":
   version "0.3.2"
   resolved "https://registry.npmjs.org/@discordjs/formatters/-/formatters-0.3.2.tgz"
   integrity sha512-lE++JZK8LSSDRM5nLjhuvWhGuKiXqu+JZ/DsOR89DVVia3z9fdCJVcHF2W/1Zxgq0re7kCzmAJlCMMX3tetKpA==
@@ -82,7 +60,7 @@
     "@discordjs/node-pre-gyp" "^0.4.5"
     node-addon-api "^5.0.0"
 
-"@discordjs/rest@^2.0.0", "@discordjs/rest@^2.0.1":
+"@discordjs/rest@^2.0.1":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@discordjs/rest/-/rest-2.0.1.tgz#100c208a964e54b8d7cd418bbaed279c816b8ec5"
   integrity sha512-/eWAdDRvwX/rIE2tuQUmKaxmWeHmGealttIzGzlYfI4+a7y9b6ZoMp8BG/jaohs8D8iEnCNYaZiOFLVFLQb8Zg==
@@ -97,7 +75,7 @@
     tslib "^2.6.1"
     undici "5.22.1"
 
-"@discordjs/util@^1.0.0", "@discordjs/util@^1.0.1":
+"@discordjs/util@^1.0.1":
   version "1.0.1"
   resolved "https://registry.npmjs.org/@discordjs/util/-/util-1.0.1.tgz"
   integrity sha512-d0N2yCxB8r4bn00/hvFZwM7goDcUhtViC5un4hPj73Ba4yrChLSJD8fy7Ps5jpTLg1fE9n4K0xBLc1y9WGwSsA==
@@ -113,9 +91,9 @@
     tslib "^2.5.0"
     ws "^8.13.0"
 
-"@discordjs/ws@^1.0.0":
+"@discordjs/ws@^1.0.1":
   version "1.0.1"
-  resolved "https://registry.npmjs.org/@discordjs/ws/-/ws-1.0.1.tgz"
+  resolved "https://registry.yarnpkg.com/@discordjs/ws/-/ws-1.0.1.tgz#fab8aa4c1667040a95b5268a2875add27353d323"
   integrity sha512-avvAolBqN3yrSvdBPcJ/0j2g42ABzrv3PEL76e3YTp2WYMGH7cuspkjfSyNWaqYl1J+669dlLp+YFMxSVQyS5g==
   dependencies:
     "@discordjs/collection" "^1.5.3"
@@ -345,59 +323,29 @@ detect-libc@^2.0.0:
   resolved "https://registry.npmjs.org/detect-libc/-/detect-libc-2.0.2.tgz"
   integrity sha512-UX6sGumvvqSaXgdKGUsgZWqcUyIXZ/vZTrlRT/iobiKhGL0zL4d3osHj3uqllWJK+i+sixDS/3COVEOFbupFyw==
 
-discord-api-types@0.37.50, discord-api-types@^0.37.37, discord-api-types@^0.37.50:
+discord-api-types@0.37.50, discord-api-types@^0.37.37:
   version "0.37.50"
   resolved "https://registry.npmjs.org/discord-api-types/-/discord-api-types-0.37.50.tgz"
   integrity sha512-X4CDiMnDbA3s3RaUXWXmgAIbY1uxab3fqe3qwzg5XutR3wjqi7M3IkgQbsIBzpqBN2YWr/Qdv7JrFRqSgb4TFg==
 
-discord-api-types@^0.37.62:
-  version "0.37.62"
-  resolved "https://registry.yarnpkg.com/discord-api-types/-/discord-api-types-0.37.62.tgz#ace78d2cd09c63ad8c7066edd99fddb515a93f90"
-  integrity sha512-KpLQ6TiylGSSHj8AQW8Hz1ek1MkBbQUWs4gZhWH0rvSsWSj9tfav6EIitSxbFmqveqfu8oiPFI7vgFE4kBhTcQ==
-
-discord-player@^6.6.6:
-  version "6.6.6"
-  resolved "https://registry.yarnpkg.com/discord-player/-/discord-player-6.6.6.tgz#57d84e347e9bba66bcec58306975d43789143849"
-  integrity sha512-XYQU4Vuy3H1aXgdaNPajzp8od7salL5cy2JIWoUdINKv5rCVXeu24BxkPj7QB5Db6uK3yKCOumfIWkL0Il1uVQ==
+discord.js@^14.13.0:
+  version "14.13.0"
+  resolved "https://registry.yarnpkg.com/discord.js/-/discord.js-14.13.0.tgz#e7a00bdba70adb9e266a06884ca1acaf9a0b5c20"
+  integrity sha512-Kufdvg7fpyTEwANGy9x7i4od4yu5c6gVddGi5CKm4Y5a6sF0VBODObI3o0Bh7TGCj0LfNT8Qp8z04wnLFzgnbA==
   dependencies:
-    "@discord-player/equalizer" "^0.2.3"
-    "@discord-player/ffmpeg" "^0.1.0"
-    "@discord-player/utils" "^0.2.2"
-    discord-voip "^0.1.3"
-    ip "^1.1.8"
-    libsodium-wrappers "^0.7.10"
-
-discord-voip@^0.1.3:
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/discord-voip/-/discord-voip-0.1.3.tgz#6823ad81b924314f6a9aa536cd5bb43fb1631a80"
-  integrity sha512-9DWY5/BLPXeldVwPr8/ggGjggTYOTw77aGQc3+4n5K54bRbbiJ9DUJc+mJzDiSLoHN3f286eRGACJYtrUu27xA==
-  dependencies:
-    "@discord-player/ffmpeg" "^0.1.0"
-    "@discord-player/opus" "^0.1.2"
-    "@types/ws" "^8.5.5"
-    discord-api-types "^0.37.50"
-    prism-media "^1.3.5"
-    tslib "^2.6.1"
-    ws "^8.13.0"
-
-discord.js@^14.12.1:
-  version "14.12.1"
-  resolved "https://registry.npmjs.org/discord.js/-/discord.js-14.12.1.tgz"
-  integrity sha512-gGjhTkauIPgFXxpBl0UZgyehrKhDe90cIS8Hn1xFBYQ63EuUAkKoUqRNmc/pcla6DD16s4cUz5tAbdSpXivnxw==
-  dependencies:
-    "@discordjs/builders" "^1.6.4"
-    "@discordjs/collection" "^1.5.2"
-    "@discordjs/formatters" "^0.3.1"
-    "@discordjs/rest" "^2.0.0"
-    "@discordjs/util" "^1.0.0"
-    "@discordjs/ws" "^1.0.0"
+    "@discordjs/builders" "^1.6.5"
+    "@discordjs/collection" "^1.5.3"
+    "@discordjs/formatters" "^0.3.2"
+    "@discordjs/rest" "^2.0.1"
+    "@discordjs/util" "^1.0.1"
+    "@discordjs/ws" "^1.0.1"
     "@sapphire/snowflake" "^3.5.1"
     "@types/ws" "^8.5.5"
-    discord-api-types "^0.37.50"
+    discord-api-types "0.37.50"
     fast-deep-equal "^3.1.3"
     lodash.snakecase "^4.1.1"
     tslib "^2.6.1"
-    undici "^5.22.1"
+    undici "5.22.1"
     ws "^8.13.0"
 
 dotenv@^16.3.1:
@@ -545,11 +493,6 @@ inherits@2, inherits@^2.0.3:
   resolved "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
 
-ip@^1.1.8:
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/ip/-/ip-1.1.8.tgz#ae05948f6b075435ed3307acce04629da8cdbf48"
-  integrity sha512-PuExPYUiu6qMBQb4l06ecm6T6ujzhmh+MeJcW9wa89PoAz5pvd4zPgN5WJV104mb6S2T1AwNIAaB70JNrLQWhg==
-
 is-binary-path@~2.1.0:
   version "2.1.0"
   resolved "https://registry.npmjs.org/is-binary-path/-/is-binary-path-2.1.0.tgz"
@@ -578,18 +521,6 @@ is-number@^7.0.0:
   version "7.0.0"
   resolved "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz"
   integrity sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==
-
-libsodium-wrappers@^0.7.10:
-  version "0.7.13"
-  resolved "https://registry.yarnpkg.com/libsodium-wrappers/-/libsodium-wrappers-0.7.13.tgz#83299e06ee1466057ba0e64e532777d2929b90d3"
-  integrity sha512-kasvDsEi/r1fMzKouIDv7B8I6vNmknXwGiYodErGuESoFTohGSKZplFtVxZqHaoQ217AynyIFgnOVRitpHs0Qw==
-  dependencies:
-    libsodium "^0.7.13"
-
-libsodium@^0.7.13:
-  version "0.7.13"
-  resolved "https://registry.yarnpkg.com/libsodium/-/libsodium-0.7.13.tgz#230712ec0b7447c57b39489c48a4af01985fb393"
-  integrity sha512-mK8ju0fnrKXXfleL53vtp9xiPq5hKM0zbDQtcxQIsSmxNgSxqCj6R7Hl9PkrNe2j29T4yoDaF7DJLK9/i5iWUw==
 
 lodash.snakecase@^4.1.1:
   version "4.1.1"
@@ -776,18 +707,6 @@ picomatch@^2.0.4, picomatch@^2.2.1:
   resolved "https://registry.npmjs.org/picomatch/-/picomatch-2.3.1.tgz"
   integrity sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==
 
-play-audio@^0.5.2:
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/play-audio/-/play-audio-0.5.2.tgz#191dd45b95ff64ae20bbd718671da4e987d4edd1"
-  integrity sha512-ZAqHUKkQLix2Iga7pPbsf1LpUoBjcpwU93F1l3qBIfxYddQLhxS6GKmS0d3jV8kSVaUbr6NnOEcEMFvuX93SWQ==
-
-play-dl@^1.9.7:
-  version "1.9.7"
-  resolved "https://registry.yarnpkg.com/play-dl/-/play-dl-1.9.7.tgz#885beb66ad3b450632733240faeb65040a43b30f"
-  integrity sha512-KpgerWxUCY4s9Mhze2qdqPhiqd8Ve6HufpH9mBH3FN+vux55qSh6WJKDabfie8IBHN7lnrAlYcT/UdGax58c2A==
-  dependencies:
-    play-audio "^0.5.2"
-
 prism-media@^1.3.5:
   version "1.3.5"
   resolved "https://registry.npmjs.org/prism-media/-/prism-media-1.3.5.tgz"
@@ -973,7 +892,7 @@ undici-types@~5.26.4:
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz"
   integrity sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==
 
-undici@5.22.1, undici@^5.22.1:
+undici@5.22.1:
   version "5.22.1"
   resolved "https://registry.npmjs.org/undici/-/undici-5.22.1.tgz"
   integrity sha512-Ji2IJhFXZY0x/0tVBXeQwgPlLWw13GVzpsWPQ3rV50IFMMof2I55PZZxtm4P6iNq+L5znYN9nSTAq0ZyE6lSJw==

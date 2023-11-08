@@ -93,6 +93,7 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
+dist
 
 # Gatsby files
 .cache/
@@ -141,3 +142,4 @@ out
 .svelte-kit
 
 # End of https://www.toptal.com/developers/gitignore/api/node
+dist/index.js
