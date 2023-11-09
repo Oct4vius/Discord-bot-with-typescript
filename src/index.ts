@@ -1,8 +1,10 @@
 import {Client, GatewayIntentBits, IntentsBitField, Message, VoiceChannel} from 'discord.js';
 import { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnection, AudioPlayer } from '@discordjs/voice';
 import { config } from 'dotenv';
+import { createReadStream } from 'fs'
 import axios from 'axios';
 import ytdl from 'ytdl-core';
+import { error } from 'console';
 
 config();
 
@@ -12,59 +14,68 @@ type bensonInteractionType = {
     audio: string
 }
 
+type queueType = {
+    url: string
+    thumbnail?: string
+    title?: string
+    author?: string
+}
+
 const apiKey: string | undefined = process.env.API_KEY_GOOGLE;
 const apiUrl: string =  "https://www.googleapis.com/youtube/v3"
 
 let connection: VoiceConnection | undefined;
-let voiceMusicChannel: VoiceChannel;
-let textMusicChannel: any;
-let queue: string[] = [];
-let nowPlayingUrl: string;
 
-const youtubeSearch = async (searchTerm: string) =>{
+let player: AudioPlayer = createAudioPlayer();
+let textMusicChannel: any;
+let queue: queueType[] = [];
+
+const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined > => {
     const url = `${apiUrl}/search?key=${apiKey}&type=video&part=snippet&q=${searchTerm}`;
 
     try {
     
         const response = await axios.get(url);
+
+        const video = response.data.items[0]
     
-        let videoID = response.data.items[0].id.videoId;
+        let videoID = video.id.videoId;
+
+        const youtubeSearch: queueType = {
+            url: `https://www.youtube.com/watch?v=${videoID}`,
+            thumbnail: video.snippet.thumbnails.high.url,
+            title: video.snippet.title,
+            author: video.snippet.channelTitle
+        }
     
-        return `https://www.youtube.com/watch?v=${videoID}`;
+        return youtubeSearch;
         
     } catch (error) {
         console.log(error)
     }
 }
 
-const play = (bensonAudio?: string) =>{
+const play = (bensonAudio?: string) => {
 
     if(!connection) return;
     
     try {
     
-        let nextUrl: string = queue[0];
-        const player: AudioPlayer = createAudioPlayer();
-        
-        const resource = createAudioResource(bensonAudio ? bensonAudio : ytdl(nextUrl, {filter: 'audioonly', quality: "highestaudio", highWaterMark: 1 << 25}))
+        let nextUrl: string = queue[0]?.url;
+        const resource = createAudioResource(bensonAudio ? createReadStream(bensonAudio) : ytdl(nextUrl, {filter: 'audioonly', quality: "highestaudio", highWaterMark: 1 << 25}))
         player.play(resource);
         connection.subscribe(player);
 
         queue.shift()
 
-        connection.on("stateChange", (prevState, currState)=>{
-            console.log(currState.status)
-            if(currState.status === 'destroyed'){
-                connection = undefined;
-            }
-        })
+        player.on("stateChange", (_, currState) =>{
+            if(!connection) return
 
-        player.on("stateChange", (prevState, currState) =>{
-            
             if(currState.status === "idle"){
-                if(queue.length === 0 && connection){
+                if(queue.length === 0 || bensonAudio){
                     // textMusicChannel.send('Se acabo')
                     connection.destroy()
+                    connection = undefined
                 }else{
                     if(!bensonAudio){
                         play()
@@ -74,6 +85,10 @@ const play = (bensonAudio?: string) =>{
         })
 
         player.on('error', (error) => {
+            console.log(error)
+        })
+
+        connection.on('error', (error) =>{
             console.log(error)
         })
 
@@ -170,15 +185,7 @@ client.on('messageCreate', async (msg: Message) =>{
                     });
                 }
 
-                const player = createAudioPlayer();
-                const resource = createAudioResource(bensonInteraction[muchacho].audio)
-                player.play(resource);
-
-                connection.subscribe(player);
-
-                player.on('error', error => {
-                console.error(`Error: ${error.message} with resource `);
-                });
+                play(bensonInteraction[muchacho].audio)
             }
 
             break;
@@ -204,15 +211,7 @@ client.on('messageCreate', async (msg: Message) =>{
                     });
                 }
 
-                const player = createAudioPlayer();
-                const resource = createAudioResource(bensonInteraction[bien].audio)
-                player.play(resource);
-
-                connection.subscribe(player);
-
-                player.on('error', error => {
-                console.error(`Error: ${error.message} with resource `);
-                });
+                play(bensonInteraction[bien].audio)
             }
 
             break;
@@ -239,33 +238,9 @@ client.on('messageCreate', async (msg: Message) =>{
                     });
                 }
 
-                const player = createAudioPlayer();
-                const resource = createAudioResource(bensonInteraction[recompensa].audio)
-                player.play(resource);
-
-                connection.subscribe(player);
-
-                player.on("stateChange", (pevState, currState) =>{
-                    if(!connection) return
-                    if(currState.status === 'idle'){
-                        connection.destroy()
-                        connection = undefined
-                    }
-                })
-
-                player.on('error', error => {
-                console.error(`Error: ${error.message} with resource `);
-                });
+                play(bensonInteraction[recompensa].audio)
             }
 
-            break;
-        
-        case 'vete':
-            if(!connection) return
-
-            connection.destroy()
-            connection = undefined
-            
             break;
 
     }
@@ -287,14 +262,23 @@ client.on('messageCreate', async (msg: Message) =>{
 
             msgSplited.shift()
             let msgJoined = msgSplited.join(" ")
-            let url: string | undefined = ytdl.validateURL(msgJoined) ? msgJoined : await youtubeSearch(msgJoined);
+            let resource: queueType;
 
-            if(!url){
-                msg.reply('Hubo un problema')
-                return;
-            }
             
-            queue.push(url)
+            if(ytdl.validateURL(msgJoined)){
+                resource = {url: msgJoined}
+            }else{
+                let test: queueType | undefined = await youtubeSearch(msgJoined)
+                if (!test){
+                    msg.channel.send('Hubo un problema')
+                    return;
+                }
+
+                resource = test
+
+            }
+
+            queue.push(resource)
 
             if(connection){
                 msg.channel.send('Perate')
@@ -310,6 +294,36 @@ client.on('messageCreate', async (msg: Message) =>{
                 play();
             }
             
+            break;
+        
+        case 'skip':
+
+            if(!connection){
+                msg.channel.send("No hay na pueto wtf");
+                return;
+            }
+            
+            if(queue.length === 0){
+                msg.channel.send("Loco, no hay ma cancione en la cola")
+                return;
+            }
+
+            player.stop()
+            player = createAudioPlayer()
+
+            break;
+
+        case 'vete':
+            if(!connection) return
+
+            connection.destroy()
+            connection = undefined
+            
+            break;
+
+        case 'test':
+            console.log(queue)
+
             break;
     }
 
