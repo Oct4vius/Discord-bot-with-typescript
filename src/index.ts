@@ -73,7 +73,7 @@ const play = (bensonAudio?: string) => {
 
             if(currState.status === "idle"){
                 if(queue.length === 0 || bensonAudio){
-                    // textMusicChannel.send('Se acabo')
+                    if(!bensonAudio) textMusicChannel.send('Se acabo')
                     connection.destroy()
                     connection = undefined
                 }else{
