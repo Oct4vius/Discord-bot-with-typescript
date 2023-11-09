@@ -4,7 +4,6 @@ import { config } from 'dotenv';
 import { createReadStream } from 'fs'
 import axios from 'axios';
 import ytdl from 'ytdl-core';
-import { error } from 'console';
 
 config();
 
