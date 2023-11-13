@@ -1,4 +1,4 @@
-import {Client, GatewayIntentBits, IntentsBitField, Message, VoiceChannel} from 'discord.js';
+import {Client, GatewayIntentBits, IntentsBitField, Message, EmbedBuilder, embedLength, GuildChannel, TextChannel } from 'discord.js';
 import { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnection, AudioPlayer } from '@discordjs/voice';
 import { config } from 'dotenv';
 import { createReadStream } from 'fs'
@@ -26,7 +26,8 @@ const apiUrl: string =  "https://www.googleapis.com/youtube/v3"
 let connection: VoiceConnection | undefined;
 
 let player: AudioPlayer = createAudioPlayer();
-let textMusicChannel: any;
+let nowPlaying: queueType;
+let message: Message;
 let queue: queueType[] = [];
 
 const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined > => {
@@ -65,16 +66,35 @@ const play = (bensonAudio?: string) => {
         player.play(resource);
         connection.subscribe(player);
 
-        queue.shift()
+        nowPlaying = queue[0]
 
-        player.on("stateChange", (_, currState) =>{
+        queue.shift();
+
+        if(nowPlaying.title && nowPlaying.thumbnail && nowPlaying.author && message){
+            const nPlaying = new EmbedBuilder()
+                .setTitle(nowPlaying.title)
+                .setDescription(nowPlaying.author)
+                .setURL(nowPlaying.url)
+                .setImage(nowPlaying.thumbnail)
+                .setAuthor({
+                    iconURL: message.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png`,
+                    name: message.member?.user.username || `Este tiguere no tiene nombre que diablo`
+                })
+
+            message.channel.send({embeds: [nPlaying]})
+            
+        }
+
+
+        
+        player.on("stateChange", (_, currState) =>{       
             if(!connection) return
-
             if(currState.status === "idle"){
                 if(queue.length === 0 || bensonAudio){
-                    if(!bensonAudio) textMusicChannel.send('Se acabo')
+
                     connection.destroy()
                     connection = undefined
+                    queue = []
                 }else{
                     if(!bensonAudio){
                         play()
@@ -273,14 +293,22 @@ client.on('messageCreate', async (msg: Message) =>{
                     return;
                 }
 
-                resource = test
+                resource = test;
 
             }
 
             queue.push(resource)
 
             if(connection){
-                msg.channel.send('Perate')
+                const addSongEmbed = new EmbedBuilder()
+                .setTitle(`Te va a tene que aguanta porque hay ${queue.length} atra de esa`)
+                .setDescription(`\` ${resource.title} \` \nTambién puedes saltarla usando \`skip\` `)
+                .setAuthor({
+                    iconURL: msg.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png` ,
+                    name: msg.member?.user.username ||  `Este tiguere no tiene nombre que diablo`
+                })
+
+                msg.channel.send({embeds: [addSongEmbed]})
             }
 
             if(!connection){
@@ -289,8 +317,9 @@ client.on('messageCreate', async (msg: Message) =>{
                     guildId: msg.guild.id,
                     adapterCreator: msg.guild?.voiceAdapterCreator,
                 });
-                textMusicChannel = msg.channel
+                message = msg
                 play();
+
             }
             
             break;
@@ -306,6 +335,11 @@ client.on('messageCreate', async (msg: Message) =>{
                 msg.channel.send("Loco, no hay ma cancione en la cola")
                 return;
             }
+
+            player.on("stateChange", (_, currState) =>{
+                if(currState.status === 'playing'){
+                }
+            })
 
             player.stop()
             player = createAudioPlayer()
