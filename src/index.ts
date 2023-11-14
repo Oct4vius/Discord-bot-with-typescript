@@ -1,4 +1,4 @@
-import {Client, GatewayIntentBits, IntentsBitField, Message, EmbedBuilder, embedLength, GuildChannel, TextChannel } from 'discord.js';
+import {Client, GatewayIntentBits, IntentsBitField, Message, EmbedBuilder } from 'discord.js';
 import { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnection, AudioPlayer } from '@discordjs/voice';
 import { config } from 'dotenv';
 import { createReadStream } from 'fs'
@@ -20,6 +20,11 @@ type queueType = {
     author?: string
 }
 
+type fieldsType = {
+    name: string
+    value: string
+}
+
 const apiKey: string | undefined = process.env.API_KEY_GOOGLE;
 const apiUrl: string =  "https://www.googleapis.com/youtube/v3"
 
@@ -29,7 +34,7 @@ let nowPlaying: queueType | undefined;
 let message: Message;
 let queue: queueType[] = [];
 
-const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined > => {
+const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined> => {
     const url = `${apiUrl}/search?key=${apiKey}&type=video&part=snippet&q=${searchTerm}`;
 
     try {
@@ -78,13 +83,11 @@ const play = (bensonAudio?: string) => {
                     iconURL: message.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png`,
                     name: message.member?.user.username || `Este tiguere no tiene nombre que diablo`
                 })
-
             message.channel.send({embeds: [nPlaying]})
         }
 
         player.on("stateChange", (prevState, currState) =>{       
             if(!connection) return
-            console.log(queue.length)
 
             if(prevState.status === 'playing' && currState.status === "idle"){
                 if(queue.length === 0 || bensonAudio){
@@ -285,7 +288,7 @@ client.on('messageCreate', async (msg: Message) =>{
             }else{
                 let test: queueType | undefined = await youtubeSearch(msgJoined)
                 if (!test){
-                    msg.channel.send('Hubo un problema')
+                    msg.channel.send('Muchacho se acaban la peticiones a la api. Ven mañana para la recompensa.')
                     return;
                 }
 
@@ -298,7 +301,7 @@ client.on('messageCreate', async (msg: Message) =>{
             if(connection){
                 const addSongEmbed = new EmbedBuilder()
                 .setTitle(`Te va a tene que aguanta porque hay ${queue.length} atra de esa`)
-                .setDescription(`\` ${resource.title || ""} \` \nTambién puedes saltarla usando \`skip\` `)
+                .setDescription(` ${resource.title ? `\`${resource.title}\`` : ""} \nTambién puedes saltarla usando \`skip\` `)
                 .setAuthor({
                     iconURL: msg.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png` ,
                     name: msg.member?.user.username ||  `Este tiguere no tiene nombre que diablo`
@@ -340,6 +343,31 @@ client.on('messageCreate', async (msg: Message) =>{
 
             player.stop()
 
+            break;
+        
+        case 'cola':
+
+            if(!nowPlaying) return
+
+            let fields: fieldsType[] = queue.map((song, index) => {
+                return {
+                    name: `${index + 1}. ` + (song.title || `No tengo el nombre, pero aqui ta la url xd\n${song.url}`), 
+                    value: song.author || `No tengo el autor xd`
+                }
+            })
+
+            let nowPlayingField: fieldsType = {
+                name: `Lo que ta sonando ahora -> ` + (nowPlaying?.title || `No tengo el nombre, pero aqui ta la url xd\n${nowPlaying.url}`),
+                value: nowPlaying.author || `No tengo el autor xd`
+            }
+
+            fields.unshift(nowPlayingField)
+
+            const colaEmbed = new EmbedBuilder()
+                .setTitle('Esta son las vainas que tan en la cola')
+                .setFields(...fields)
+
+            msg.channel.send({embeds: [colaEmbed]})
             break;
 
         case 'vete':
