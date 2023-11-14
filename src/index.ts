@@ -24,9 +24,8 @@ const apiKey: string | undefined = process.env.API_KEY_GOOGLE;
 const apiUrl: string =  "https://www.googleapis.com/youtube/v3"
 
 let connection: VoiceConnection | undefined;
-
-let player: AudioPlayer = createAudioPlayer();
-let nowPlaying: queueType;
+let player: AudioPlayer | undefined;
+let nowPlaying: queueType | undefined;
 let message: Message;
 let queue: queueType[] = [];
 
@@ -63,14 +62,13 @@ const play = (bensonAudio?: string) => {
     
         let nextUrl: string = queue[0]?.url;
         const resource = createAudioResource(bensonAudio ? createReadStream(bensonAudio) : ytdl(nextUrl, {filter: 'audioonly', quality: "highestaudio", highWaterMark: 1 << 25}))
+        player = createAudioPlayer()
         player.play(resource);
         connection.subscribe(player);
 
-        nowPlaying = queue[0]
+        nowPlaying = queue.shift();
 
-        queue.shift();
-
-        if(nowPlaying.title && nowPlaying.thumbnail && nowPlaying.author && message){
+        if(nowPlaying && nowPlaying.title && nowPlaying.thumbnail && nowPlaying.author && message){
             const nPlaying = new EmbedBuilder()
                 .setTitle(nowPlaying.title)
                 .setDescription(nowPlaying.author)
@@ -82,23 +80,21 @@ const play = (bensonAudio?: string) => {
                 })
 
             message.channel.send({embeds: [nPlaying]})
-            
         }
 
-
-        
-        player.on("stateChange", (_, currState) =>{       
+        player.on("stateChange", (prevState, currState) =>{       
             if(!connection) return
-            if(currState.status === "idle"){
+            console.log(queue.length)
+
+            if(prevState.status === 'playing' && currState.status === "idle"){
                 if(queue.length === 0 || bensonAudio){
 
                     connection.destroy()
                     connection = undefined
+                    player = undefined
                     queue = []
-                }else{
-                    if(!bensonAudio){
-                        play()
-                    }
+                }else if(queue.length > 0 || !bensonAudio){
+                    play();
                 }
             }
         })
@@ -302,11 +298,12 @@ client.on('messageCreate', async (msg: Message) =>{
             if(connection){
                 const addSongEmbed = new EmbedBuilder()
                 .setTitle(`Te va a tene que aguanta porque hay ${queue.length} atra de esa`)
-                .setDescription(`\` ${resource.title} \` \nTambién puedes saltarla usando \`skip\` `)
+                .setDescription(`\` ${resource.title || ""} \` \nTambién puedes saltarla usando \`skip\` `)
                 .setAuthor({
                     iconURL: msg.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png` ,
                     name: msg.member?.user.username ||  `Este tiguere no tiene nombre que diablo`
                 })
+                .setThumbnail(resource.thumbnail || `https://i.imgur.com/AfFp7pu.png`)
 
                 msg.channel.send({embeds: [addSongEmbed]})
             }
@@ -330,19 +327,18 @@ client.on('messageCreate', async (msg: Message) =>{
                 msg.channel.send("No hay na pueto wtf");
                 return;
             }
+
+            if(!player){
+                msg.channel.send('No hay na pueto');
+                return;
+            }
             
             if(queue.length === 0){
                 msg.channel.send("Loco, no hay ma cancione en la cola")
                 return;
             }
 
-            player.on("stateChange", (_, currState) =>{
-                if(currState.status === 'playing'){
-                }
-            })
-
             player.stop()
-            player = createAudioPlayer()
 
             break;
 
@@ -350,12 +346,15 @@ client.on('messageCreate', async (msg: Message) =>{
             if(!connection) return
 
             connection.destroy()
-            connection = undefined
+            connection = undefined;
+            player = undefined
+            queue = []
             
             break;
 
         case 'test':
             console.log(queue)
+            console.log(queue.length)
 
             break;
     }
