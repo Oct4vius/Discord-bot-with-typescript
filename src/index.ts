@@ -3,7 +3,7 @@ import { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnecti
 import { config } from 'dotenv';
 import { createReadStream } from 'fs'
 import axios from 'axios';
-import ytdl from 'ytdl-core';
+import playdl from 'play-dl';
 
 config();
 
@@ -59,14 +59,19 @@ const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined>
     }
 }
 
-const play = (bensonAudio?: string) => {
+const play = async (bensonAudio?: string) => {
 
     if(!connection) return;
     
     try {
     
         let nextUrl: string = queue[0]?.url;
-        const resource = createAudioResource(bensonAudio ? createReadStream(bensonAudio) : ytdl(nextUrl, {filter: 'audioonly', quality: "highestaudio", highWaterMark: 1 << 25}))
+        
+        const stream = await playdl.stream(nextUrl)
+        const resource = createAudioResource(bensonAudio ? createReadStream(bensonAudio) : stream.stream, {
+            inputType: stream.type
+        })
+
         player = createAudioPlayer()
         player.play(resource);
         connection.subscribe(player);
@@ -283,7 +288,7 @@ client.on('messageCreate', async (msg: Message) =>{
             let resource: queueType;
 
             
-            if(ytdl.validateURL(msgJoined)){
+            if(await playdl.validate(msgJoined) === 'yt_video'){
                 resource = {url: msgJoined}
             }else{
                 let test: queueType | undefined = await youtubeSearch(msgJoined)

@@ -15,8 +15,8 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "ffmpeg-static": "^5.2.0",
-    "sodium-native": "^4.0.4",
-    "ytdl-core": "^4.11.5"
+    "play-dl": "^1.9.7",
+    "sodium-native": "^4.0.4"
   },
   "devDependencies": {
     "@types/node": "^20.8.10",
