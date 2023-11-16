@@ -67,9 +67,10 @@ const play = async (bensonAudio?: string) => {
     
         let nextUrl: string = queue[0]?.url;
         
-        const stream = await playdl.stream(nextUrl)
-        const resource = createAudioResource(bensonAudio ? createReadStream(bensonAudio) : stream.stream, {
-            inputType: stream.type
+        const stream = !bensonAudio ? await playdl.stream(nextUrl) : undefined;
+
+        const resource = createAudioResource(bensonAudio ? createReadStream(bensonAudio) : (stream ? stream.stream : '') , {
+            inputType: stream ? stream.type : undefined
         })
 
         player = createAudioPlayer()
@@ -144,10 +145,11 @@ myIntents.add(
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages, 
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates
 )
 
-const client: Client = new Client( {intents: 3276799} );
+const client: Client = new Client( {intents: myIntents} );
 
 client.on('ready', () => {
     console.log(`I'm ready. My name is ${client.user?.tag}`)
