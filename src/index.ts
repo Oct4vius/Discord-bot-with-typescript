@@ -155,7 +155,6 @@ client.on('ready', () => {
     console.log(`I'm ready. My name is ${client.user?.tag}`)
 })
 
-
 client.on('messageCreate', async (msg: Message) =>{
     if(msg.author.bot) return;
     let msgSplited: string[] = msg.content.split(" ")
@@ -271,7 +270,7 @@ client.on('messageCreate', async (msg: Message) =>{
     }
 
     //Music Interactions
-    switch(msgSplited[0]){
+    switch(msgSplited[0].toLowerCase()){
         
         case 'pon':
             let voiceChannel = msg.member?.voice.channel
