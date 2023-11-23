@@ -1,29 +1,14 @@
-import {Client, GatewayIntentBits, IntentsBitField, Message, EmbedBuilder } from 'discord.js';
+import {Client, GatewayIntentBits, IntentsBitField, Message, EmbedBuilder, PresenceUpdateStatus, Partials } from 'discord.js';
 import { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnection, AudioPlayer } from '@discordjs/voice';
 import { config } from 'dotenv';
 import { createReadStream } from 'fs'
 import axios from 'axios';
 import playdl from 'play-dl';
+import { bensonInteractionType, fieldsType, queueType } from './types/index.types';
+
+import {loadEvents} from './Handlers/eventHandler'
 
 config();
-
-type bensonInteractionType = {
-    imgPath: string
-    message: string
-    audio: string
-}
-
-type queueType = {
-    url: string
-    thumbnail?: string
-    title?: string
-    author?: string
-}
-
-type fieldsType = {
-    name: string
-    value: string
-}
 
 const apiKey: string | undefined = process.env.API_KEY_GOOGLE;
 const apiUrl: string =  "https://www.googleapis.com/youtube/v3"
@@ -146,14 +131,18 @@ myIntents.add(
     GatewayIntentBits.GuildMessages, 
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildVoiceStates
+    GatewayIntentBits.GuildVoiceStates,
 )
 
-const client: Client = new Client( {intents: myIntents} );
+const client: Client = new Client( {
+    intents: myIntents,
+    partials: [Partials.User, Partials.Message, Partials.GuildMember, Partials.ThreadMember],
+    presence: {
+        activities: [{name: '¿Como \'tan muchacho?'}],
+        status: PresenceUpdateStatus.Online
+    }
 
-client.on('ready', () => {
-    console.log(`I'm ready. My name is ${client.user?.tag}`)
-})
+} );
 
 client.on('messageCreate', async (msg: Message) =>{
     if(msg.author.bot) return;
@@ -397,4 +386,6 @@ client.on('messageCreate', async (msg: Message) =>{
 
 })
 
-client.login(process.env.TOKEN)
+client.login(process.env.TOKEN).then(() => {
+    //loadEvents(client);
+})
