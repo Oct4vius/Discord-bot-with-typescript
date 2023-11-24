@@ -5,7 +5,6 @@ import { createReadStream } from 'fs'
 import axios from 'axios';
 import playdl from 'play-dl';
 import { bensonInteractionType, fieldsType, queueType } from './types/index.types';
-
 import {loadEvents} from './Handlers/eventHandler'
 
 config();
@@ -387,5 +386,5 @@ client.on('messageCreate', async (msg: Message) =>{
 })
 
 client.login(process.env.TOKEN).then(() => {
-    //loadEvents(client);
+    loadEvents(client);
 })
