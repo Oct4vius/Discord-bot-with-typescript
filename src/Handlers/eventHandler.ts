@@ -1,36 +1,25 @@
-import { Client } from "discord.js"
-import fs from 'fs'
-import ascii from 'ascii-table';
+import { Client } from "discord.js";
+import { getAllFiles } from '../utils/getAllFiles'
+import path from "path";
 
-export const loadEvents = (client: Client) => {
-    const table = new ascii().setHeading('Events', 'Status');
-    const folders = fs.readdirSync('./dist/Events');
+export const eventHandler = (client: Client) => {
+    const eventFolders = getAllFiles(path.join(__dirname, '..', 'events'), true);
+    
+    for (const eventFolder of eventFolders){
+        const eventFiles = getAllFiles(eventFolder);
 
-    for(const folder of folders){
-        const files = fs.readdirSync(`./dist/Events/${folder}`).filter(((file) => file.endsWith('.js')));
+        const eventName: string | undefined = eventFolder.replace(/\\/g, '/').split('/').pop();
 
-        for(const file of files){
-            const event = require(`../Events/${folder}/${file}`);
-            if(event.rest){
-                if(event.once)
-                    client.rest.once(event.name, (...args) => 
-                    event.execute(...args, client)
-                    );
-                else 
-                    client.rest.on(event.name, (...args) => 
-                    event.execute(...args, client)
-                );
-            } else {
-                if(event.once)
-                    client.rest.on(event.name, (...args) => 
-                    event.execute(...args, client));
-                else client.rest.on(event.name, (...args) => event.execute(...args, client)); 
+        if(!eventName) return console.log('Something is wrong :(')
+
+        console.log(eventName);
+
+        client.on(eventName, async (arg) => {
+            for(const eventFile of eventFiles){
+                const eventFunction = require(eventFile);
+                await eventFunction(client, arg);
             }
-            table.addRow(file, 'loaded');
-            continue;
-        }
-    }
-    return console.log(table.toString(), '\nLoaded events');
-}
+        })
 
-module.exports = {loadEvents}
+    }
+}
