@@ -2,7 +2,7 @@ import {Client, EmbedBuilder, Message} from 'discord.js'
 import { createReadStream } from 'fs'
 import axios from 'axios';
 import playdl from 'play-dl';
-import { bensonInteractionType, fieldsType, queueType } from '../../types/index.types';
+import { bensonInteractionType, fieldsType, queueType, queueGuildsType } from '../../types/index.types';
 import { AudioPlayer, VoiceConnection, createAudioPlayer, createAudioResource, joinVoiceChannel } from '@discordjs/voice';
 
 
@@ -13,7 +13,10 @@ let connection: VoiceConnection | undefined;
 let player: AudioPlayer | undefined;
 let nowPlaying: queueType | undefined;
 let message: Message;
-let queue: queueType[] = [];
+let queueGuilds: queueGuildsType[] = [];
+
+
+
 
 const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined> => {
     const url = `${apiUrl}/search?key=${apiKey}&type=video&part=snippet&q=${searchTerm}`;
@@ -40,13 +43,20 @@ const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined>
     }
 }
 
-const play = async (bensonAudio?: string) => {
+const play = async (guildId: string, bensonAudio?: string) => {
 
     if(!connection) return;
     
     try {
+
+        const queueGuildIndex = queueGuilds.findIndex((element) => element.guildId === message.guild?.id)
+
+        if(queueGuildIndex === -1){
+            message.channel.send('Algo salio mal :(')
+            return;
+        }
     
-        let nextUrl: string = queue[0]?.url;
+        let nextUrl: string = queueGuilds[queueGuildIndex].queue[0].url || '';
         
         const stream = !bensonAudio ? await playdl.stream(nextUrl) : undefined;
 
@@ -58,7 +68,7 @@ const play = async (bensonAudio?: string) => {
         player.play(resource);
         connection.subscribe(player);
 
-        nowPlaying = queue.shift();
+        nowPlaying = queueGuilds[queueGuildIndex].queue.shift();
 
         if(nowPlaying && nowPlaying.title && nowPlaying.thumbnail && nowPlaying.author && message){
             const nPlaying = new EmbedBuilder()
@@ -77,14 +87,14 @@ const play = async (bensonAudio?: string) => {
             if(!connection) return
 
             if(prevState.status === 'playing' && currState.status === "idle"){
-                if(queue.length === 0 || bensonAudio){
+                if(queueGuilds[queueGuildIndex].queue.length === 0 || bensonAudio){
 
                     connection.destroy()
                     connection = undefined
                     player = undefined
-                    queue = []
-                }else if(queue.length > 0 || !bensonAudio){
-                    play();
+                    queueGuilds[queueGuildIndex].queue = []
+                }else if(queueGuilds[queueGuildIndex].queue.length > 0 || !bensonAudio){
+                    play(guildId);
                 }
             }
         })
@@ -123,7 +133,6 @@ const bensonInteraction: bensonInteractionType[] = [
 
 
 module.exports = async (client: Client, msg: Message) => {
-
     if(msg.author.bot) return;
     let msgSplited: string[] = msg.content.split(" ")
     
@@ -241,6 +250,7 @@ module.exports = async (client: Client, msg: Message) => {
     switch(msgSplited[0].toLowerCase()){
         
         case 'pon':
+            
             let voiceChannel = msg.member?.voice.channel
 
             if(!msg.guild) return;
@@ -267,14 +277,29 @@ module.exports = async (client: Client, msg: Message) => {
                 }
 
                 resource = test;
+            }
+            
 
+            const existsQueue = queueGuilds.find((element) => element.guildId === msg.guild?.id)
+            let queueGuildIndex = queueGuilds.findIndex((element) => element.guildId === msg.guild?.id)
+
+            if(!existsQueue){
+                queueGuilds.push({
+                    guildId: msg.guild.id,
+                    queue: [resource]
+                })
+            } else if (existsQueue){
+                queueGuilds[queueGuildIndex].queue = [
+                    ...queueGuilds[queueGuildIndex].queue,
+                    resource
+                ]
             }
 
-            queue.push(resource)
+            console.log(queueGuilds)
 
             if(connection){
                 const addSongEmbed = new EmbedBuilder()
-                .setTitle(`Te va a tene que aguanta porque hay ${queue.length} atra de esa`)
+                .setTitle(`Te va a tene que aguanta porque hay ${queueGuilds[queueGuildIndex].queue.length} atra de esa`)
                 .setDescription(` ${resource.title ? `\`${resource.title}\`` : ""} \nTambién puedes saltarla usando \`skip\` `)
                 .setAuthor({
                     iconURL: msg.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png` ,
@@ -292,13 +317,14 @@ module.exports = async (client: Client, msg: Message) => {
                     adapterCreator: msg.guild?.voiceAdapterCreator,
                 });
                 message = msg
-                play();
-
+                play(msg.guild.id);
             }
             
             break;
         
         case 'skip':
+
+            let skipQueueGuildIndex = queueGuilds.findIndex((element) => element.guildId === msg.guild?.id)
 
             if(!connection){
                 msg.channel.send("No hay na pueto wtf");
@@ -310,8 +336,8 @@ module.exports = async (client: Client, msg: Message) => {
                 return;
             }
             
-            if(queue.length === 0){
-                msg.channel.send("Loco, no hay ma cancione en la cola")
+            if(skipQueueGuildIndex === -1){
+                message.channel.send('Algo salio mal :(')
                 return;
             }
 
@@ -323,7 +349,10 @@ module.exports = async (client: Client, msg: Message) => {
 
             if(!nowPlaying) return
 
-            let fields: fieldsType[] = queue.map((song, index) => {
+            const colaQueueGuildIndex = queueGuilds.findIndex((element) => element.guildId === message.guild?.id)
+
+
+            let fields: fieldsType[] = queueGuilds[colaQueueGuildIndex].queue.map((song, index) => {
                 return {
                     name: `${index + 1}. ` + (song.title || `No tengo el nombre, pero aqui ta la url xd\n${song.url}`), 
                     value: song.author || `No tengo el autor xd`
@@ -347,16 +376,27 @@ module.exports = async (client: Client, msg: Message) => {
         case 'vete':
             if(!connection) return
 
+            let leaveQueueGuildIndex = queueGuilds.findIndex((element) => element.guildId === msg.guild?.id)
+
             connection.destroy()
             connection = undefined;
             player = undefined
-            queue = []
+            queueGuilds[leaveQueueGuildIndex].queue = []
             
             break;
 
         case 'test':
-            console.log(queue)
-            console.log(queue.length)
+            console.log(queueGuilds[0].queue)
+            console.log(queueGuilds[0].queue.length)
+
+            if(!msg.member?.voice.channel) return msg.reply('no')
+            if(!msg.guild) return;
+            
+            const hola = joinVoiceChannel({
+                channelId: msg.member?.voice.channel.id,
+                guildId: msg.guild.id,
+                adapterCreator: msg.guild?.voiceAdapterCreator,
+            });
 
             break;
     }

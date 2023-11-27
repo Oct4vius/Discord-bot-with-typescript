@@ -15,3 +15,8 @@ export type fieldsType = {
     name: string
     value: string
 }
+
+export type queueGuildsType = {
+    guildId: string
+    queue: queueType[]
+}
