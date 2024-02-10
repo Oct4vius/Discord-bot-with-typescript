@@ -2,7 +2,7 @@ import {Client, EmbedBuilder, Message} from 'discord.js'
 import { createReadStream } from 'fs'
 import axios from 'axios';
 import playdl from 'play-dl';
-import { bensonInteractionType, fieldsType, queueType, queueGuildsType } from '../../types/index.types';
+import { bensonInteractionType, fieldsType, queueType } from '../../types/index.types';
 import { AudioPlayer, VoiceConnection, createAudioPlayer, createAudioResource, joinVoiceChannel } from '@discordjs/voice';
 
 
@@ -13,9 +13,7 @@ let connection: VoiceConnection | undefined;
 let player: AudioPlayer | undefined;
 let nowPlaying: queueType | undefined;
 let message: Message;
-let queueGuilds: queueGuildsType[] = [];
 let queue: queueType[] = [];
-
 
 const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined> => {
     const url = `${apiUrl}/search?key=${apiKey}&type=video&part=snippet&q=${searchTerm}`;
@@ -42,14 +40,13 @@ const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined>
     }
 }
 
-const play = async (guildId: string, bensonAudio?: string) => {
+const play = async (bensonAudio?: string) => {
 
     if(!connection) return;
-
-    try {
-
     
-        let nextUrl: string = queue[0]?.url || '';
+    try {
+    
+        let nextUrl: string = queue[0]?.url;
         
         const stream = !bensonAudio ? await playdl.stream(nextUrl) : undefined;
 
@@ -87,7 +84,7 @@ const play = async (guildId: string, bensonAudio?: string) => {
                     player = undefined
                     queue = []
                 }else if(queue.length > 0 || !bensonAudio){
-                    play(guildId);
+                    play();
                 }
             }
         })
@@ -125,7 +122,8 @@ const bensonInteraction: bensonInteractionType[] = [
 ]
 
 
-module.exports = async (_: Client, msg: Message) => {
+module.exports = async (client: Client, msg: Message) => {
+
     if(msg.author.bot) return;
     let msgSplited: string[] = msg.content.split(" ")
     
@@ -244,7 +242,6 @@ module.exports = async (_: Client, msg: Message) => {
     switch(msgSplited[0].toLowerCase()){
         
         case 'pon':
-            
             let voiceChannel = msg.member?.voice.channel
 
             if(!msg.guild) return;
@@ -271,29 +268,14 @@ module.exports = async (_: Client, msg: Message) => {
                 }
 
                 resource = test;
-            }
-            
 
-            const existsQueue = queueGuilds.find((element) => element.guildId === msg.guild?.id)
-            let queueGuildIndex = queueGuilds.findIndex((element) => element.guildId === msg.guild?.id)
-
-            if(!existsQueue){
-                queueGuilds.push({
-                    guildId: msg.guild.id,
-                    queue: [resource]
-                })
-            } else if (existsQueue){
-                queueGuilds[queueGuildIndex].queue = [
-                    ...queueGuilds[queueGuildIndex].queue,
-                    resource
-                ]
             }
 
-            console.log(queueGuilds)
+            queue.push(resource)
 
             if(connection){
                 const addSongEmbed = new EmbedBuilder()
-                .setTitle(`Te va a tene que aguanta porque hay ${queueGuilds[queueGuildIndex].queue.length} atra de esa`)
+                .setTitle(`Te va a tene que aguanta porque hay ${queue.length} atra de esa`)
                 .setDescription(` ${resource.title ? `\`${resource.title}\`` : ""} \nTambién puedes saltarla usando \`skip\` `)
                 .setAuthor({
                     iconURL: msg.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png` ,
@@ -311,14 +293,13 @@ module.exports = async (_: Client, msg: Message) => {
                     adapterCreator: msg.guild?.voiceAdapterCreator,
                 });
                 message = msg
-                play(msg.guild.id);
+                play();
+
             }
             
             break;
         
         case 'skip':
-
-            let skipQueueGuildIndex = queueGuilds.findIndex((element) => element.guildId === msg.guild?.id)
 
             if(!connection){
                 msg.channel.send("No hay na pueto wtf");
@@ -330,8 +311,8 @@ module.exports = async (_: Client, msg: Message) => {
                 return;
             }
             
-            if(skipQueueGuildIndex === -1){
-                message.channel.send('Algo salio mal :(')
+            if(queue.length === 0){
+                msg.channel.send("Loco, no hay ma cancione en la cola")
                 return;
             }
 
@@ -343,10 +324,7 @@ module.exports = async (_: Client, msg: Message) => {
 
             if(!nowPlaying) return
 
-            const colaQueueGuildIndex = queueGuilds.findIndex((element) => element.guildId === message.guild?.id)
-
-
-            let fields: fieldsType[] = queueGuilds[colaQueueGuildIndex].queue.map((song, index) => {
+            let fields: fieldsType[] = queue.map((song, index) => {
                 return {
                     name: `${index + 1}. ` + (song.title || `No tengo el nombre, pero aqui ta la url xd\n${song.url}`), 
                     value: song.author || `No tengo el autor xd`
@@ -370,27 +348,16 @@ module.exports = async (_: Client, msg: Message) => {
         case 'vete':
             if(!connection) return
 
-            let leaveQueueGuildIndex = queueGuilds.findIndex((element) => element.guildId === msg.guild?.id)
-
             connection.destroy()
             connection = undefined;
             player = undefined
-            queueGuilds[leaveQueueGuildIndex].queue = []
+            queue = []
             
             break;
 
         case 'test':
-            console.log(queueGuilds[0].queue)
-            console.log(queueGuilds[0].queue.length)
-
-            if(!msg.member?.voice.channel) return msg.reply('no')
-            if(!msg.guild) return;
-            
-            const hola = joinVoiceChannel({
-                channelId: msg.member?.voice.channel.id,
-                guildId: msg.guild.id,
-                adapterCreator: msg.guild?.voiceAdapterCreator,
-            });
+            console.log(queue)
+            console.log(queue.length)
 
             break;
     }
