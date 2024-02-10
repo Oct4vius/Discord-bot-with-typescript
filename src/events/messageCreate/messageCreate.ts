@@ -361,6 +361,4 @@ module.exports = async (client: Client, msg: Message) => {
             break;
     }
 
-    //Chatgpt Interactions
-
 }
