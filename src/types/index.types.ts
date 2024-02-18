@@ -1,3 +1,14 @@
+import { PlayerSubscription } from "@discordjs/voice"
+
+export type servers = {
+    [severId: string]: serverProp
+}
+
+export type serverProp = {
+    queue: queueType[]
+    dipatcher?: PlayerSubscription
+} 
+
 export type bensonInteractionType = {
     imgPath: string
     message: string

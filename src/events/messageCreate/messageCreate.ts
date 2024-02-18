@@ -1,365 +1,366 @@
-import {Client, EmbedBuilder, Message} from 'discord.js'
-import { createReadStream } from 'fs'
-import axios from 'axios';
-import playdl from 'play-dl';
-import { bensonInteractionType, fieldsType, queueType } from '../../types/index.types';
-import { AudioPlayer, VoiceConnection, createAudioPlayer, createAudioResource, joinVoiceChannel } from '@discordjs/voice';
-
+import { Client, EmbedBuilder, Message } from "discord.js";
+import { createReadStream } from "fs";
+import axios from "axios";
+import playdl from "play-dl";
+import {
+  bensonInteractionType,
+  fieldsType,
+  queueType,
+  servers,
+} from "../../types/index.types";
+import {
+  AudioPlayerStatus,
+  CreateVoiceConnectionOptions,
+  JoinVoiceChannelOptions,
+  VoiceConnection,
+  createAudioPlayer,
+  createAudioResource,
+  joinVoiceChannel,
+} from "@discordjs/voice";
 
 const apiKey: string | undefined = process.env.API_KEY_GOOGLE;
-const apiUrl: string =  "https://www.googleapis.com/youtube/v3"
+const apiUrl: string = "https://www.googleapis.com/youtube/v3";
 
-let connection: VoiceConnection | undefined;
-let player: AudioPlayer | undefined;
+let playerCurrentState: AudioPlayerStatus;
 let nowPlaying: queueType | undefined;
-let message: Message;
-let queue: queueType[] = [];
+let servers: servers = {};
 
-const youtubeSearch = async (searchTerm: string): Promise<queueType | undefined> => {
-    const url = `${apiUrl}/search?key=${apiKey}&type=video&part=snippet&q=${searchTerm}`;
+const youtubeSearch = async (
+  searchTerm: string
+): Promise<queueType | undefined> => {
+  const url = `${apiUrl}/search?key=${apiKey}&type=video&part=snippet&q=${searchTerm}`;
 
-    try {
-    
-        const response = await axios.get(url);
+  try {
+    const response = await axios.get(url);
 
-        const video = response.data.items[0]
-    
-        let videoID = video.id.videoId;
+    const video = response.data.items[0];
 
-        const youtubeSearch: queueType = {
-            url: `https://www.youtube.com/watch?v=${videoID}`,
-            thumbnail: video.snippet.thumbnails.high.url,
-            title: video.snippet.title,
-            author: video.snippet.channelTitle
-        }
-    
-        return youtubeSearch;
-        
-    } catch (error) {
-        console.log(error)
+    let videoID = video.id.videoId;
+
+    const youtubeSearch: queueType = {
+      url: `https://www.youtube.com/watch?v=${videoID}`,
+      thumbnail: video.snippet.thumbnails.high.url,
+      title: video.snippet.title,
+      author: video.snippet.channelTitle,
+    };
+
+    return youtubeSearch;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const newPlay = async (
+  msg: Message,
+  connection: VoiceConnection,
+  bensonAudio?: string
+) => {
+  if (!msg.guild) return;
+  if (!msg.member || !msg.member.voice.channel) return;
+
+  let server = servers[msg.guild.id];
+
+  const stream = !bensonAudio
+    ? await playdl.stream(server.queue[0].url!)
+    : undefined;
+
+  const resource = createAudioResource(
+    bensonAudio ? createReadStream(bensonAudio) : stream ? stream.stream : "",
+    {
+      inputType: stream ? stream.type : undefined,
     }
-}
+  );
 
-const play = async (bensonAudio?: string) => {
+  let player = createAudioPlayer();
+  player.play(resource);
 
-    if(!connection) return;
-    
-    try {
-    
-        let nextUrl: string = queue[0]?.url;
-        
-        const stream = !bensonAudio ? await playdl.stream(nextUrl) : undefined;
+  server.dipatcher = connection.subscribe(player);
 
-        const resource = createAudioResource(bensonAudio ? createReadStream(bensonAudio) : (stream ? stream.stream : '') , {
-            inputType: stream ? stream.type : undefined
-        })
+  nowPlaying = server.queue.shift();
 
-        player = createAudioPlayer()
-        player.play(resource);
-        connection.subscribe(player);
+  if (
+    nowPlaying &&
+    nowPlaying.title &&
+    nowPlaying.thumbnail &&
+    nowPlaying.author &&
+    msg
+  ) {
+    const nPlaying = new EmbedBuilder()
+      .setTitle(nowPlaying.title)
+      .setDescription(nowPlaying.author)
+      .setURL(nowPlaying.url!)
+      .setImage(nowPlaying.thumbnail)
+      .setAuthor({
+        iconURL:
+        msg.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png`,
+        name:
+        msg.member?.user.username ||
+          `Este tiguere no tiene nombre que diablo`,
+      });
+      msg.channel.send({ embeds: [nPlaying] });
+  }
 
-        nowPlaying = queue.shift();
+  if (!server.dipatcher) return;
 
-        if(nowPlaying && nowPlaying.title && nowPlaying.thumbnail && nowPlaying.author && message){
-            const nPlaying = new EmbedBuilder()
-                .setTitle(nowPlaying.title)
-                .setDescription(nowPlaying.author)
-                .setURL(nowPlaying.url)
-                .setImage(nowPlaying.thumbnail)
-                .setAuthor({
-                    iconURL: message.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png`,
-                    name: message.member?.user.username || `Este tiguere no tiene nombre que diablo`
-                })
-            message.channel.send({embeds: [nPlaying]})
-        }
+  server.dipatcher.player.on("stateChange", (_, currState) => {
+    playerCurrentState = currState.status;
 
-        player.on("stateChange", (prevState, currState) =>{       
-            if(!connection) return
-
-            if(prevState.status === 'playing' && currState.status === "idle"){
-                if(queue.length === 0 || bensonAudio){
-
-                    connection.destroy()
-                    connection = undefined
-                    player = undefined
-                    queue = []
-                }else if(queue.length > 0 || !bensonAudio){
-                    play();
-                }
-            }
-        })
-
-        player.on('error', (error) => {
-            console.log(error)
-        })
-
-        connection.on('error', (error) =>{
-            console.log(error)
-        })
-
-    } catch (error) {
-        console.log(error)
+    if (playerCurrentState === "idle") {
+      if (server.queue.length === 0) {
+        connection.destroy();
+        server.queue = [];
+      } else if (server.queue.length > 0) {
+        newPlay(msg, connection);
+      }
     }
-
-}
+  });
+};
 
 const bensonInteraction: bensonInteractionType[] = [
-    {
-        imgPath: "./assets/images/benson.png",
-        message: "¿Como \'ta muchacho?",
-        audio: "./assets/audio/cmtm.mp3"
-    },
-    {
-        imgPath: "./assets/images/muchacho.png",
-        message: "Yo te veo muy bien.",
-        audio: "./assets/audio/ylvaumb.mp3"
-    },
-    {
-        imgPath: "./assets/images/recompensa.png",
-        message: "Tú te merece' una recompensa.",
-        audio: "./assets/audio/recompensa.mp3"
-    }
-]
+  {
+    imgPath: "./assets/images/benson.png",
+    message: "¿Como 'ta muchacho?",
+    audio: "./assets/audio/cmtm.mp3",
+  },
+  {
+    imgPath: "./assets/images/muchacho.png",
+    message: "Yo te veo muy bien.",
+    audio: "./assets/audio/ylvaumb.mp3",
+  },
+  {
+    imgPath: "./assets/images/recompensa.png",
+    message: "Tú te merece' una recompensa.",
+    audio: "./assets/audio/recompensa.mp3",
+  },
+];
 
+module.exports = async (_: Client, msg: Message) => {
+  if (msg.author.bot) return;
+  if (!msg.guild) return;
 
-module.exports = async (client: Client, msg: Message) => {
+  let guildId = msg.guild.id;
+  let msgSplited: string[] = msg.content.split(" ");
 
-    if(msg.author.bot) return;
-    let msgSplited: string[] = msg.content.split(" ")
-    
-    
-    //Benson Interactions
-    switch(msg.content.toLowerCase()){
-        case 'ctm':
-            let random: number = Math.trunc(Math.random() * bensonInteraction.length);
+  let VoiceConnectionProps: CreateVoiceConnectionOptions &
+    JoinVoiceChannelOptions = {
+    guildId: guildId,
+    channelId: msg.member?.voice.channel?.id || "",
+    adapterCreator: msg.guild.voiceAdapterCreator,
+  };
 
-            msg.reply({
-                content: bensonInteraction[random].message,
-                files: [bensonInteraction[random].imgPath]
-            })
-            
-            if (msg.member && msg.member.voice.channel){
-                if(!msg.guild) return
+  if (!servers[guildId])
+    servers[guildId] = {
+      queue: [],
+    };
 
-                const voiceChannel = msg.member.voice.channel;
+  //   Benson Interactions
+  switch (msg.content.toLowerCase()) {
+    case "ctm":
+      let random: number = Math.trunc(Math.random() * bensonInteraction.length);
 
-                if(!connection){
-                    connection = joinVoiceChannel({
-                        channelId: voiceChannel.id,
-                        guildId: msg.guild.id,
-                        adapterCreator: msg.guild?.voiceAdapterCreator,
-                    });
-                }
+      msg.reply({
+        content: bensonInteraction[random].message,
+        files: [bensonInteraction[random].imgPath],
+      });
 
-                play(bensonInteraction[random].audio)
+      if (msg.member && msg.member.voice.channel) {
+        if (!msg.guild) return;
 
-            }
+        let connection = joinVoiceChannel(VoiceConnectionProps);
 
-            break;
+        newPlay(msg, connection, bensonInteraction[random].audio);
+      }
 
-        case 'muchacho':
-            const muchacho: number = 0
+      return;
 
-            msg.reply({
-                content: bensonInteraction[muchacho].message,
-                files: [bensonInteraction[muchacho].imgPath]
-            })
-            
-            if (msg.member && msg.member.voice.channel){
-                if(!msg.guild) return
+    case "muchacho":
+      const muchacho: number = 0;
 
-                const voiceChannel = msg.member.voice.channel;
+      msg.reply({
+        content: bensonInteraction[muchacho].message,
+        files: [bensonInteraction[muchacho].imgPath],
+      });
 
-                if(!connection){
-                    connection = joinVoiceChannel({
-                        channelId: voiceChannel.id,
-                        guildId: msg.guild.id,
-                        adapterCreator: msg.guild?.voiceAdapterCreator,
-                    });
-                }
+      if (msg.member && msg.member.voice.channel) {
+        if (!msg.guild) return;
 
-                play(bensonInteraction[muchacho].audio)
-            }
+        let connection = joinVoiceChannel(VoiceConnectionProps);
 
-            break;
+        newPlay(msg, connection, bensonInteraction[muchacho].audio);
+      }
 
-        case 'bien':
-            let bien: number = 1
+      return;
 
-            msg.reply({
-                content: bensonInteraction[bien].message,
-                files: [bensonInteraction[bien].imgPath]
-            })
-            
-            if (msg.member && msg.member.voice.channel){
-                if(!msg.guild) return
+    case "bien":
+      let bien: number = 1;
 
-                const voiceChannel = msg.member.voice.channel;
+      msg.reply({
+        content: bensonInteraction[bien].message,
+        files: [bensonInteraction[bien].imgPath],
+      });
 
-                if(!connection){
-                    connection = joinVoiceChannel({
-                        channelId: voiceChannel.id,
-                        guildId: msg.guild.id,
-                        adapterCreator: msg.guild?.voiceAdapterCreator,
-                    });
-                }
+      if (msg.member && msg.member.voice.channel) {
+        if (!msg.guild) return;
 
-                play(bensonInteraction[bien].audio)
-            }
+        let connection = joinVoiceChannel(VoiceConnectionProps);
 
-            break;
+        newPlay(msg, connection, bensonInteraction[bien].audio);
+      }
 
-        case 'recompensa':
+      return;
 
-            let recompensa: number = 2
+    case "recompensa":
+      let recompensa: number = 2;
 
-            msg.reply({
-                content: bensonInteraction[recompensa].message,
-                files: [bensonInteraction[recompensa].imgPath]
-            })
-            
-            if (msg.member && msg.member.voice.channel){
-                if(!msg.guild) return
+      msg.reply({
+        content: bensonInteraction[recompensa].message,
+        files: [bensonInteraction[recompensa].imgPath],
+      });
 
-                const voiceChannel = msg.member.voice.channel;
+      if (msg.member && msg.member.voice.channel) {
+        if (!msg.guild) return;
 
-                if(!connection){
-                    connection = joinVoiceChannel({
-                        channelId: voiceChannel.id,
-                        guildId: msg.guild.id,
-                        adapterCreator: msg.guild?.voiceAdapterCreator,
-                    });
-                }
+        let connection = joinVoiceChannel(VoiceConnectionProps);
 
-                play(bensonInteraction[recompensa].audio)
-            }
+        newPlay(msg, connection, bensonInteraction[recompensa].audio);
+      }
 
-            break;
+      return;
+  }
 
-    }
+  //Music Interactions
 
-    //Music Interactions
-    switch(msgSplited[0].toLowerCase()){
-        
-        case 'pon':
-            let voiceChannel = msg.member?.voice.channel
+  if (!msg.member?.voice.channel?.id) {
+    msg.channel.send("you have to be in a voice channel you imbecile!");
+  }
 
-            if(!msg.guild) return;
+  let server = servers[guildId];
 
-            if(msgSplited.length < 2){
-                msg.channel.send('Tienes que dar un parametro')
-                return;
-            }
+  switch (msgSplited[0].toLowerCase()) {
+    case "pon":
+      if (msgSplited.length < 2) {
+        msg.channel.send("Tienes que dar un parametro");
+        return;
+      }
 
-            if(!voiceChannel) return
+      if (!msg.member?.voice.channel) return;
 
-            msgSplited.shift()
-            let msgJoined = msgSplited.join(" ")
-            let resource: queueType;
+      msgSplited.shift();
+      let msgJoined = msgSplited.join(" ");
+      let resource: queueType;
 
-            
-            if(await playdl.validate(msgJoined) === 'yt_video'){
-                resource = {url: msgJoined}
-            }else{
-                let test: queueType | undefined = await youtubeSearch(msgJoined)
-                if (!test){
-                    msg.channel.send('Muchacho se acaban la peticiones a la api. Ven mañana para la recompensa.')
-                    return;
-                }
+      if ((await playdl.validate(msgJoined)) === "yt_video") {
+        resource = { url: msgJoined };
+      } else {
+        let test: queueType | undefined = await youtubeSearch(msgJoined);
+        if (!test) {
+          msg.channel.send(
+            "Muchacho se acaban la peticiones a la api. Ven mañana para la recompensa."
+          );
+          return;
+        }
 
-                resource = test;
+        resource = test;
+      }
 
-            }
+      server.queue.push(resource);
 
-            queue.push(resource)
+      if (playerCurrentState === "playing") {
+        const addSongEmbed = new EmbedBuilder()
+          .setTitle(
+            `Te va a tene que aguanta porque hay ${server.queue.length} atra de esa`
+          )
+          .setDescription(
+            ` ${
+              resource.title ? `\`${resource.title}\`` : ""
+            } \nTambién puedes saltarla usando \`skip\` `
+          )
+          .setAuthor({
+            iconURL:
+              msg.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png`,
+            name:
+              msg.member?.user.username ||
+              `Este tiguere no tiene nombre que diablo`,
+          })
+          .setThumbnail(
+            resource.thumbnail || `https://i.imgur.com/AfFp7pu.png`
+          );
 
-            if(connection){
-                const addSongEmbed = new EmbedBuilder()
-                .setTitle(`Te va a tene que aguanta porque hay ${queue.length} atra de esa`)
-                .setDescription(` ${resource.title ? `\`${resource.title}\`` : ""} \nTambién puedes saltarla usando \`skip\` `)
-                .setAuthor({
-                    iconURL: msg.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png` ,
-                    name: msg.member?.user.username ||  `Este tiguere no tiene nombre que diablo`
-                })
-                .setThumbnail(resource.thumbnail || `https://i.imgur.com/AfFp7pu.png`)
+        msg.channel.send({ embeds: [addSongEmbed] });
 
-                msg.channel.send({embeds: [addSongEmbed]})
-            }
+        return;
+      }
 
-            if(!connection){
-                connection = joinVoiceChannel({
-                    channelId: voiceChannel.id,
-                    guildId: msg.guild.id,
-                    adapterCreator: msg.guild?.voiceAdapterCreator,
-                });
-                message = msg
-                play();
+      let connection = joinVoiceChannel(VoiceConnectionProps);
 
-            }
-            
-            break;
-        
-        case 'skip':
+      newPlay(msg, connection);
 
-            if(!connection){
-                msg.channel.send("No hay na pueto wtf");
-                return;
-            }
+      break;
 
-            if(!player){
-                msg.channel.send('No hay na pueto');
-                return;
-            }
-            
-            if(queue.length === 0){
-                msg.channel.send("Loco, no hay ma cancione en la cola")
-                return;
-            }
+    case "skip":
+      if (!server.dipatcher?.connection) {
+        msg.channel.send("No hay na pueto wtf");
+        return;
+      }
 
-            player.stop()
+      if (!server.dipatcher.player) {
+        msg.channel.send("No hay na pueto");
+        return;
+      }
 
-            break;
-        
-        case 'cola':
+      if (server.queue.length === 0) {
+        msg.channel.send("Loco, no hay ma cancione en la cola");
+        return;
+      }
 
-            if(!nowPlaying) return
+      server.dipatcher.player.stop();
 
-            let fields: fieldsType[] = queue.map((song, index) => {
-                return {
-                    name: `${index + 1}. ` + (song.title || `No tengo el nombre, pero aqui ta la url xd\n${song.url}`), 
-                    value: song.author || `No tengo el autor xd`
-                }
-            })
+      break;
 
-            let nowPlayingField: fieldsType = {
-                name: `Lo que ta sonando ahora -> ` + (nowPlaying?.title || `No tengo el nombre, pero aqui ta la url xd\n${nowPlaying.url}`),
-                value: nowPlaying.author || `No tengo el autor xd`
-            }
+    case "cola":
+      if (!nowPlaying) return;
 
-            fields.unshift(nowPlayingField)
+      let fields: fieldsType[] = server.queue.map((song, index) => {
+        return {
+          name:
+            `${index + 1}. ` +
+            (song.title ||
+              `No tengo el nombre, pero aqui ta la url xd\n${song.url}`),
+          value: song.author || `No tengo el autor xd`,
+        };
+      });
 
-            const colaEmbed = new EmbedBuilder()
-                .setTitle('Esta son las vainas que tan en la cola')
-                .setFields(...fields)
+      let nowPlayingField: fieldsType = {
+        name:
+          `Lo que ta sonando ahora -> ` +
+          (nowPlaying?.title ||
+            `No tengo el nombre, pero aqui ta la url xd\n${nowPlaying.url}`),
+        value: nowPlaying.author || `No tengo el autor xd`,
+      };
 
-            msg.channel.send({embeds: [colaEmbed]})
-            break;
+      fields.unshift(nowPlayingField);
 
-        case 'vete':
-            if(!connection) return
+      const colaEmbed = new EmbedBuilder()
+        .setTitle("Esta son las vainas que tan en la cola")
+        .setFields(...fields);
 
-            connection.destroy()
-            connection = undefined;
-            player = undefined
-            queue = []
-            
-            break;
+      msg.channel.send({ embeds: [colaEmbed] });
+      break;
 
-        case 'test':
-            console.log(queue)
-            console.log(queue.length)
+    case "vete":
+      if (!server.dipatcher?.connection) return;
 
-            break;
-    }
+      server.dipatcher.connection.destroy();
+      server.queue = [];
 
-}
+      break;
+
+    case "test":
+      console.log(server.queue);
+      console.log(server.queue.length);
+
+      break;
+  }
+
+  //Music Interactions END
+};
