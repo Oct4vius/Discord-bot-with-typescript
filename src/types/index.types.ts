@@ -7,6 +7,7 @@ export type servers = {
 export type serverProp = {
     queue: queueType[]
     dipatcher?: PlayerSubscription
+    nowPlaying?: queueType
 } 
 
 export type bensonInteractionType = {

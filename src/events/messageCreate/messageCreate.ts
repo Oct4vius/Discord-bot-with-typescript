@@ -9,7 +9,6 @@ import {
   servers,
 } from "../../types/index.types";
 import {
-  AudioPlayerStatus,
   CreateVoiceConnectionOptions,
   JoinVoiceChannelOptions,
   VoiceConnection,
@@ -21,8 +20,6 @@ import {
 const apiKey: string | undefined = process.env.API_KEY_GOOGLE;
 const apiUrl: string = "https://www.googleapis.com/youtube/v3";
 
-let playerCurrentState: AudioPlayerStatus;
-let nowPlaying: queueType | undefined;
 let servers: servers = {};
 
 const youtubeSearch = async (
@@ -76,20 +73,20 @@ const newPlay = async (
 
   server.dipatcher = connection.subscribe(player);
 
-  nowPlaying = server.queue.shift();
+  server.nowPlaying = server.queue.shift();
 
   if (
-    nowPlaying &&
-    nowPlaying.title &&
-    nowPlaying.thumbnail &&
-    nowPlaying.author &&
+    server.nowPlaying &&
+    server.nowPlaying.title &&
+    server.nowPlaying.thumbnail &&
+    server.nowPlaying.author &&
     msg
   ) {
     const nPlaying = new EmbedBuilder()
-      .setTitle(nowPlaying.title)
-      .setDescription(nowPlaying.author)
-      .setURL(nowPlaying.url!)
-      .setImage(nowPlaying.thumbnail)
+      .setTitle(server.nowPlaying.title)
+      .setDescription(server.nowPlaying.author)
+      .setURL(server.nowPlaying.url!)
+      .setImage(server.nowPlaying.thumbnail)
       .setAuthor({
         iconURL:
         msg.member?.user.avatarURL() || `https://i.imgur.com/AfFp7pu.png`,
@@ -103,9 +100,8 @@ const newPlay = async (
   if (!server.dipatcher) return;
 
   server.dipatcher.player.on("stateChange", (_, currState) => {
-    playerCurrentState = currState.status;
 
-    if (playerCurrentState === "idle") {
+    if (currState.status === "idle") {
       if (server.queue.length === 0) {
         connection.destroy();
         server.queue = [];
@@ -265,7 +261,7 @@ module.exports = async (_: Client, msg: Message) => {
 
       server.queue.push(resource);
 
-      if (playerCurrentState === "playing") {
+      if (server.dipatcher?.player.state.status === "playing") {
         const addSongEmbed = new EmbedBuilder()
           .setTitle(
             `Te va a tene que aguanta porque hay ${server.queue.length} atra de esa`
@@ -318,7 +314,7 @@ module.exports = async (_: Client, msg: Message) => {
       break;
 
     case "cola":
-      if (!nowPlaying) return;
+      if (!server.nowPlaying) return;
 
       let fields: fieldsType[] = server.queue.map((song, index) => {
         return {
@@ -333,9 +329,9 @@ module.exports = async (_: Client, msg: Message) => {
       let nowPlayingField: fieldsType = {
         name:
           `Lo que ta sonando ahora -> ` +
-          (nowPlaying?.title ||
-            `No tengo el nombre, pero aqui ta la url xd\n${nowPlaying.url}`),
-        value: nowPlaying.author || `No tengo el autor xd`,
+          (server.nowPlaying.title ||
+            `No tengo el nombre, pero aqui ta la url xd\n${server.nowPlaying.url}`),
+        value: server.nowPlaying.author || `No tengo el autor xd`,
       };
 
       fields.unshift(nowPlayingField);
