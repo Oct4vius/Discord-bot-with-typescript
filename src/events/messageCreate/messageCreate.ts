@@ -226,9 +226,7 @@ module.exports = async (_: Client, msg: Message) => {
 
   //Music Interactions
 
-  if (!msg.member?.voice.channel?.id) {
-    msg.channel.send("you have to be in a voice channel you imbecile!");
-  }
+
 
   let server = servers[guildId];
 
@@ -239,7 +237,9 @@ module.exports = async (_: Client, msg: Message) => {
         return;
       }
 
-      if (!msg.member?.voice.channel) return;
+      if (!msg.member?.voice.channel?.id) {
+        msg.channel.send("you have to be in a voice channel you imbecile!");
+      }
 
       msgSplited.shift();
       let msgJoined = msgSplited.join(" ");
@@ -299,6 +299,10 @@ module.exports = async (_: Client, msg: Message) => {
         return;
       }
 
+      if (!msg.member?.voice.channel?.id) {
+        msg.channel.send("you have to be in a voice channel you imbecile!");
+      }
+
       if (!server.dipatcher.player) {
         msg.channel.send("No hay na pueto");
         return;
@@ -344,6 +348,11 @@ module.exports = async (_: Client, msg: Message) => {
       break;
 
     case "vete":
+
+      if (msg.member?.voice.channel?.id) {
+        msg.channel.send("you have to be in a voice channel you imbecile!");
+      }
+
       if (!server.dipatcher?.connection) return;
 
       server.dipatcher.connection.destroy();
@@ -351,11 +360,6 @@ module.exports = async (_: Client, msg: Message) => {
 
       break;
 
-    case "test":
-      console.log(server.queue);
-      console.log(server.queue.length);
-
-      break;
   }
 
   //Music Interactions END
