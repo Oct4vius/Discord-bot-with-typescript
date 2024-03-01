@@ -239,6 +239,7 @@ module.exports = async (_: Client, msg: Message) => {
 
       if (!msg.member?.voice.channel?.id) {
         msg.channel.send("you have to be in a voice channel you imbecile!");
+        return;
       }
 
       msgSplited.shift();
@@ -301,6 +302,7 @@ module.exports = async (_: Client, msg: Message) => {
 
       if (!msg.member?.voice.channel?.id) {
         msg.channel.send("you have to be in a voice channel you imbecile!");
+        return;
       }
 
       if (!server.dipatcher.player) {
@@ -351,6 +353,7 @@ module.exports = async (_: Client, msg: Message) => {
 
       if (msg.member?.voice.channel?.id) {
         msg.channel.send("you have to be in a voice channel you imbecile!");
+        return;
       }
 
       if (!server.dipatcher?.connection) return;
