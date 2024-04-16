@@ -1,6 +1,7 @@
 import {Client, GatewayIntentBits, IntentsBitField, PresenceUpdateStatus, Partials } from 'discord.js';
 import { config } from 'dotenv';
-import { eventHandler } from './handlers/eventHandler';
+import { eventHandler } from './Handlers/eventHandler';
+import { channel } from 'diagnostics_channel';
 
 config();
 
@@ -22,6 +23,8 @@ const client: Client = new Client( {
     }
     
 } );
+
+
 
 eventHandler(client);
 
