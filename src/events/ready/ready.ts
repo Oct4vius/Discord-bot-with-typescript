@@ -1,35 +1,32 @@
 import axios from "axios";
-import { APIEmbedField, Client, EmbedBuilder, RestOrArray, TextChannel } from "discord.js";
-import { shuffle } from "../../utils/shuffle";
+import { Client, EmbedBuilder, TextChannel } from "discord.js";
+import { shiftObjectOrder } from "../../utils/shuffle";
 
 module.exports = async (client: Client) => {
   console.log(`I'm ready. My name is ${client.user?.tag}`);
 
   const channel = (await client.channels.fetch(
-    "1229834611362631713"
+    "805916546224488452"
   )) as TextChannel;
   if (!channel) return;
 
-
   const response = await axios.get('https://random-list-project-default-rtdb.firebaseio.com/people.json')
 
-  const reorder = shuffle(response.data)
-
-  const order: RestOrArray<APIEmbedField> = []
+  const reorder = shiftObjectOrder(response.data)
+  
+  let order: string = ''
 
   Object.keys(reorder).map((key) => {
-    order.push({
-        name: key,
-        value: reorder[+key].name
-    })
+    order += `**${+key+1}**- ${reorder[+key].name}\n\n`
   })
 
   const orderEMbed = new EmbedBuilder()
           .setTitle(
             `Microondas`
           )
-          .setFields(...order)
+          .setDescription(order)
 
   channel.send({ embeds: [orderEMbed] })
 
 };
+

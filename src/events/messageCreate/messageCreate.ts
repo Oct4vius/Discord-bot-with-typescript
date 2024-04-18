@@ -16,6 +16,8 @@ import {
   createAudioResource,
   joinVoiceChannel,
 } from "@discordjs/voice";
+import { handleReset } from "../../utils/shuffle";
+// import { handleReset } from "../../utils/shuffle";
 
 const apiKey: string | undefined = process.env.API_KEY_GOOGLE;
 const apiUrl: string = "https://www.googleapis.com/youtube/v3";
@@ -222,12 +224,12 @@ module.exports = async (_: Client, msg: Message) => {
       }
 
       return;
+
+    case "reset/microwave/shuffle":
+      console.log(await handleReset())
   }
 
   //Music Interactions
-
-
-
   let server = servers[guildId];
 
   switch (msgSplited[0].toLowerCase()) {

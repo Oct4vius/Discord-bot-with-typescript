@@ -1,14 +1,59 @@
-import { IPerson, IShufflerResult } from "../types/index.types";
+import axios from "axios";
+
+const url = "https://random-list-project-default-rtdb.firebaseio.com";
 
 
-export const shuffle = (data: IPerson): IShufflerResult => {
-  const array = Object.entries(data).map((key) => key[1]);
+export function shiftObjectOrder(obj: any): any {
+  const arrObj = Object.values(obj)
 
-  array.sort((v, v2) => v2.points - v.points);
+  const lastElement = arrObj.pop();
+  arrObj.unshift(lastElement!);
 
-  const result = Object.fromEntries(
-    array.map((item, index) => [index + 1, item])
-  );
+  const tempobj: Record<string, string> = {}
 
-  return result;
+  arrObj.forEach((item, index) => {
+    tempobj[index] = item as string
+  })
+
+  axios.put(`${url}/people.json`, {
+    ...tempobj,
+  });
+
+  return arrObj;
+}
+
+export const handleReset = async () => {
+  const objToSend: Record<string, { name: string }> = {};
+
+  const arr = [
+    "Bryan",
+    "Luima",
+    "Nohemy",
+    "Ezequiel",
+    "Alan",
+    "Miguel",
+    "Anderson",
+    "Lee",
+    "Octavio",
+    "Sami",
+    "Jarvin",
+    "Jochy",
+    "Sahira",
+    "Edwille",
+    "Eliezer",
+  ];
+
+  arr.forEach((item, index) => {
+    objToSend[`${index}${item}12`] = {
+      name: item,
+    };
+  });
+
+  const res = await axios.put(`${url}/people.json`, {
+    ...objToSend,
+  }).catch((err) => {
+    return err;
+  });
+
+  return res;
 };
