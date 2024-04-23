@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Client, EmbedBuilder, TextChannel } from "discord.js";
 import { shiftObjectOrder } from "../../utils/shuffle";
+import { MicrowaveListReponse } from "../../types/index.types";
 
 module.exports = async (client: Client) => {
   console.log(`I'm ready. My name is ${client.user?.tag}`);
@@ -10,7 +11,7 @@ module.exports = async (client: Client) => {
   )) as TextChannel;
   if (!channel) return;
 
-  const response = await axios.get('https://random-list-project-default-rtdb.firebaseio.com/people.json')
+  const response = await axios.get<MicrowaveListReponse[]>('https://random-list-project-default-rtdb.firebaseio.com/people.json')
 
   const reorder = shiftObjectOrder(response.data)
   
@@ -20,13 +21,13 @@ module.exports = async (client: Client) => {
     order += `**${+key+1}**- ${reorder[+key].name}\n\n`
   })
 
-  const orderEMbed = new EmbedBuilder()
+  const orderEmbed = new EmbedBuilder()
           .setTitle(
             `Microondas`
           )
           .setDescription(order)
 
-  channel.send({ embeds: [orderEMbed] })
+  channel.send({ embeds: [orderEmbed] })
 
 };
 

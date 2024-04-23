@@ -46,3 +46,7 @@ export interface ShuffleResponse {
     count: number;
     name:  string;
 }
+
+export interface MicrowaveListReponse {
+  name: string;
+}

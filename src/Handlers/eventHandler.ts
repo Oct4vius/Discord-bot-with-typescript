@@ -12,8 +12,6 @@ export const eventHandler = (client: Client) => {
 
         if(!eventName) return console.log('Something is wrong :(')
 
-        console.log(eventName);
-
         client.on(eventName, async (arg) => {
             for(const eventFile of eventFiles){
                 const eventFunction = require(eventFile);

@@ -17,7 +17,6 @@ import {
   joinVoiceChannel,
 } from "@discordjs/voice";
 import { handleReset } from "../../utils/shuffle";
-// import { handleReset } from "../../utils/shuffle";
 
 const apiKey: string | undefined = process.env.API_KEY_GOOGLE;
 const apiUrl: string = "https://www.googleapis.com/youtube/v3";

@@ -2,16 +2,19 @@ import axios from "axios";
 
 const url = "https://random-list-project-default-rtdb.firebaseio.com";
 
-
 export function shiftObjectOrder(obj: any): any {
   const arrObj = Object.values(obj)
 
-  const lastElement = arrObj.pop();
-  arrObj.unshift(lastElement!);
+  const fistHalf = arrObj.slice(0, arrObj.length / 2);
+  const secondHalf = arrObj.slice(arrObj.length / 2, arrObj.length);
+
+
+  const shuffledArray = [...shuffle(secondHalf as string[]), ...shuffle(fistHalf as string[])];
+
 
   const tempobj: Record<string, string> = {}
 
-  arrObj.forEach((item, index) => {
+  shuffledArray.forEach((item, index) => {
     tempobj[index] = item as string
   })
 
@@ -57,3 +60,21 @@ export const handleReset = async () => {
 
   return res;
 };
+
+function shuffle(array: string[]): string[] {
+  let currentIndex = array.length;
+
+  // While there remain elements to shuffle...
+  while (currentIndex != 0) {
+
+    // Pick a remaining element...
+    let randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
