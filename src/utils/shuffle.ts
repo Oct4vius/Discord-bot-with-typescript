@@ -8,9 +8,7 @@ export function shiftObjectOrder(obj: any): any {
   const fistHalf = arrObj.slice(0, arrObj.length / 2);
   const secondHalf = arrObj.slice(arrObj.length / 2, arrObj.length);
 
-
   const shuffledArray = [...shuffle(secondHalf as string[]), ...shuffle(fistHalf as string[])];
-
 
   const tempobj: Record<string, string> = {}
 
@@ -62,19 +60,5 @@ export const handleReset = async () => {
 };
 
 function shuffle(array: string[]): string[] {
-  let currentIndex = array.length;
-
-  // While there remain elements to shuffle...
-  while (currentIndex != 0) {
-
-    // Pick a remaining element...
-    let randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]];
-  }
-
-  return array;
+  return array.sort(() => Math.random() - 0.5); 
 }
