@@ -27,6 +27,8 @@ module.exports = async (client: Client) => {
     "01:14",
     "01:18",
     "01:18",
+    "01:22",
+    "01:22",
   ];
 
 
@@ -40,8 +42,6 @@ module.exports = async (client: Client) => {
     const response = await axios.get<MicrowaveListReponse[]>(
       "https://random-list-project-default-rtdb.firebaseio.com/people.json"
     );
-    
-    
 
     const reorder = shiftObjectOrder(response.data);
   

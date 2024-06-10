@@ -59,6 +59,16 @@ export const handleReset = async () => {
   return res;
 };
 
-function shuffle(array: string[]): string[] {
-  return array.sort(() => Math.random() - 0.5); 
+
+function shuffle(arr: string[]): string[] {
+      // Get the length of the array
+      let n = arr.length;
+      // Traverse the array from the last element to the first element
+      for (let i = n - 1; i > 0; i--) {
+          // Generate a random index from 0 to i
+          const j = Math.floor(Math.random() * (i + 1));
+          // Swap arr[i] with the element at the random index
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
 }
