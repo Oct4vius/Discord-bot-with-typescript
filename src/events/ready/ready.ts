@@ -28,10 +28,10 @@ module.exports = async (client: Client) => {
 
     const reorder = shiftObjectOrder(response.data);
   
-    let order: string = "";
+    let embedDescription: string = "";
   
     Object.keys(reorder).map((key, index) => {
-      order += `**${+key + 1}**- ${reorder[+key].name} 🕐 **${hora}** \n\n`;
+      embedDescription += `**${+key + 1}**- ${reorder[+key].name} 🕐 **${hora}** \n\n`;
       if((index + 1) % 2 === 0 && index !== 0) {
         hora = sumarMinutosAHora(hora, 4)
       }
@@ -39,7 +39,7 @@ module.exports = async (client: Client) => {
   
     const orderEmbed = new EmbedBuilder()
       .setTitle(`Microondas`)
-      .setDescription(order);
+      .setDescription(embedDescription);
   
     await channel.send({ embeds: [orderEmbed] });
 
