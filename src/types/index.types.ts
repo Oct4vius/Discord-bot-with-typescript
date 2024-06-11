@@ -39,7 +39,6 @@ export interface IShufflerResult {
 
 export interface IPerson {
   name: string;
-  points: number;
 }
 
 export interface ShuffleResponse {

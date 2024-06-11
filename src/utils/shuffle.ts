@@ -1,19 +1,20 @@
 import axios from "axios";
+import { IPerson } from "../types/index.types";
 
 const url = "https://random-list-project-default-rtdb.firebaseio.com";
 
-export function shiftObjectOrder(obj: any): any {
+export function shiftObjectOrder(obj: IPerson[]): IPerson[] {
   const arrObj = Object.values(obj)
 
   const fistHalf = arrObj.slice(0, arrObj.length / 2);
   const secondHalf = arrObj.slice(arrObj.length / 2, arrObj.length);
 
-  const shuffledArray = [...shuffle(secondHalf as string[]), ...shuffle(fistHalf as string[])];
+  const shuffledArray = [...shuffle(secondHalf as IPerson[]), ...shuffle(fistHalf as IPerson[])];
 
-  const tempobj: Record<string, string> = {}
+  const tempobj: Record<string, IPerson> = {}
 
   shuffledArray.forEach((item, index) => {
-    tempobj[index] = item as string
+    tempobj[index] = item
   })
 
   axios.put(`${url}/people.json`, {
@@ -60,7 +61,7 @@ export const handleReset = async () => {
 };
 
 
-function shuffle(arr: string[]): string[] {
+function shuffle(arr: IPerson[]): IPerson[] {
       // Get the length of the array
       let n = arr.length;
       // Traverse the array from the last element to the first element

@@ -10,32 +10,15 @@ import cron from 'node-cron';
 
 module.exports = async (client: Client) => {
   console.log(`I'm ready. My name is ${client.user?.tag}`);
-  const horas = [
-    "12:50",
-    "12:50",
-    "12:54",
-    "12:54",
-    "12:58",
-    "12:58",
-    "01:02",
-    "01:02",
-    "01:06",
-    "01:06",
-    "01:10",
-    "01:10",
-    "01:14",
-    "01:14",
-    "01:18",
-    "01:18",
-    "01:22",
-    "01:22",
-  ];
+  
 
 
-  cron.schedule('30 12 * * 1-5', async () => {
+  // cron.schedule('30 12 * * 1-5', async () => {
+
+    let hora = '12:50'
 
     const channel = (await client.channels.fetch(
-      "1229834611362631713"
+      "805916546224488452"
     )) as TextChannel;
     if (!channel) return;
   
@@ -48,16 +31,34 @@ module.exports = async (client: Client) => {
     let order: string = "";
   
     Object.keys(reorder).map((key, index) => {
-      order += `**${+key + 1}**- ${reorder[+key].name} 🕐 **${horas[index]}** \n\n`;
+      order += `**${+key + 1}**- ${reorder[+key].name} 🕐 **${hora}** \n\n`;
+      if((index + 1) % 2 === 0 && index !== 0) {
+        hora = sumarMinutosAHora(hora, 4)
+      }
     });
   
     const orderEmbed = new EmbedBuilder()
       .setTitle(`Microondas`)
       .setDescription(order);
   
-    channel.send({ embeds: [orderEmbed] });
+    await channel.send({ embeds: [orderEmbed] });
 
-  })
+  // })
 
 
 };
+
+const sumarMinutosAHora = (hora: string, minutosASumar: number): string => {
+  const [horas, minutos] = hora.split(':').map(Number);
+  const horaDate = new Date();
+  horaDate.setHours(horas);
+  horaDate.setMinutes(minutos + minutosASumar);
+
+  const nuevaHora = horaDate.getHours();
+  const nuevosMinutos = horaDate.getMinutes();
+
+  // Ajustar el formato a 'HH:mm'
+  const horaFormateada = `${nuevaHora < 10 ? '0' + nuevaHora : nuevaHora}:${nuevosMinutos < 10 ? '0' + nuevosMinutos : nuevosMinutos}`;
+
+  return horaFormateada;
+}
