@@ -5,6 +5,7 @@ import playdl from "play-dl";
 import {
   bensonInteractionType,
   fieldsType,
+  MicrowaveListReponse,
   queueType,
   servers,
 } from "../../types/index.types";
@@ -150,6 +151,25 @@ module.exports = async (_: Client, msg: Message) => {
       queue: [],
     };
 
+
+  if(msg.content === "/MRrifa"){
+    const {data} = await axios.get<MicrowaveListReponse[]>(
+      "https://random-list-project-default-rtdb.firebaseio.com/people.json"
+    );
+
+    const randomIndex = Math.floor(Math.random() * data.length);
+
+    setTimeout(() => {
+      msg.channel.send({
+        content: `**${data[randomIndex].name}** se gano la recompensa.`, 
+        files: [bensonInteraction[0].imgPath]
+      });
+    }, 5000);
+
+
+    console.log(data[randomIndex].name);
+  }
+
   //   Benson Interactions
   switch (msg.content.toLowerCase()) {
     case "ctm":
@@ -230,7 +250,6 @@ module.exports = async (_: Client, msg: Message) => {
 
   //Music Interactions
   let server = servers[guildId];
-
   switch (msgSplited[0].toLowerCase()) {
     case "pon":
       if (msgSplited.length < 2) {
@@ -365,6 +384,4 @@ module.exports = async (_: Client, msg: Message) => {
       break;
 
   }
-
-  //Music Interactions END
 };
