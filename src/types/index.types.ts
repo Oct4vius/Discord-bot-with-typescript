@@ -1,4 +1,5 @@
 import { PlayerSubscription } from "@discordjs/voice";
+import { Client, Collection, Interaction } from "discord.js";
 
 export type servers = {
   [severId: string]: serverProp;
@@ -49,4 +50,8 @@ export interface ShuffleResponse {
 
 export interface MicrowaveListReponse {
   name: string;
+}
+
+export type CustomClient = Client & {
+  commands?: Collection<string, Interaction>
 }

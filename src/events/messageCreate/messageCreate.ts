@@ -166,8 +166,6 @@ module.exports = async (_: Client, msg: Message) => {
       });
     }, 5000);
 
-
-    console.log(data[randomIndex].name);
   }
 
   //   Benson Interactions
