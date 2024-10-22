@@ -1,6 +1,6 @@
 import { PlayerSubscription } from "@discordjs/voice";
 
-export type servers = {
+export type ServersTypes = {
   [severId: string]: serverProp;
 };
 
